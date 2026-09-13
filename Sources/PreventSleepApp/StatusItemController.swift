@@ -22,6 +22,7 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
         super.init()
 
         setupButton()
+        update(state: currentOperationalState)
         buildMenu()
 
         Task {

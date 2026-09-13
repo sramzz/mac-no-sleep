@@ -36,7 +36,7 @@ public struct StatusPresentation: Equatable, Sendable {
             )
         case .setupRequired:
             return StatusPresentation(
-                symbolName: "gearshape.badge.exclamationmark",
+                symbolName: "gearshape.fill",
                 tooltip: "Setup required",
                 accessibilityLabel: "Prevent sleep setup required"
             )
@@ -56,8 +56,13 @@ public struct StatusPresentation: Equatable, Sendable {
     }
 
     public var image: NSImage? {
-        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityLabel)
-        image?.isTemplate = true
-        return image
+        if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityLabel) {
+            image.isTemplate = true
+            return image
+        }
+        let fallback = NSImage(systemSymbolName: "cup.and.saucer", accessibilityDescription: accessibilityLabel)
+            ?? NSImage(systemSymbolName: "gearshape", accessibilityDescription: accessibilityLabel)
+        fallback?.isTemplate = true
+        return fallback
     }
 }

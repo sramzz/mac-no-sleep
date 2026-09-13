@@ -29,5 +29,23 @@ struct StatusIconRendererTests {
         #expect(StatusPresentation.forState(.ready(preventSleep: false)).symbolName == "cup.and.saucer")
         #expect(StatusPresentation.forState(.changing(target: true)).symbolName == "arrow.triangle.2.circlepath")
         #expect(StatusPresentation.forState(.unavailable(reason: "err")).symbolName == "exclamationmark.triangle")
+        #expect(StatusPresentation.forState(.setupRequired).symbolName == "gearshape.fill")
+    }
+
+    @Test("Every state produces a valid non-nil NSImage")
+    func testAllStatesProduceNonNilImage() {
+        let states: [OperationalState] = [
+            .ready(preventSleep: true),
+            .ready(preventSleep: false),
+            .changing(target: true),
+            .unavailable(reason: "err"),
+            .setupRequired,
+            .reading,
+            .removing
+        ]
+        for state in states {
+            let presentation = StatusPresentation.forState(state)
+            #expect(presentation.image != nil, "Image for \(state) must not be nil")
+        }
     }
 }
