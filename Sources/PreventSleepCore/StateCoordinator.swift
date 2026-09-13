@@ -44,6 +44,10 @@ public actor StateCoordinator {
             if !isMutating {
                 transition(to: .ready(preventSleep: active))
             }
+        } catch PreventSleepError.helperNotInstalled {
+            if !isMutating {
+                transition(to: .setupRequired)
+            }
         } catch let error as PreventSleepError {
             if !isMutating {
                 transition(to: .unavailable(reason: error.localizedDescription))

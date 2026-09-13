@@ -123,4 +123,19 @@ struct StateCoordinatorTests {
         let state = await coordinator.currentState
         #expect(state == .unavailable(reason: "The 'SleepDisabled' setting was not found in pmset output."))
     }
+
+    @Test("Helper not installed transitions to setupRequired")
+    func testHelperNotInstalledTransitionsToSetupRequired() async throws {
+        let mock = MockPowerClient()
+        mock.stateToReturn = .failure(.helperNotInstalled)
+
+        let coordinator = StateCoordinator(
+            fetchHandler: { try await mock.getState() },
+            mutateHandler: { try await mock.setPreventSleep($0) }
+        )
+
+        await coordinator.refresh()
+        let state = await coordinator.currentState
+        #expect(state == .setupRequired)
+    }
 }

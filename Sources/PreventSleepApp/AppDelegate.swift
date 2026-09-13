@@ -12,8 +12,18 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         let client = HelperClient()
 
         coordinator = StateCoordinator(
-            fetchHandler: { try await client.getState() },
-            mutateHandler: { try await client.setPreventSleep($0) }
+            fetchHandler: {
+                if AppServiceManager.shared.daemonStatus != .enabled {
+                    throw PreventSleepError.helperNotInstalled
+                }
+                return try await client.getState()
+            },
+            mutateHandler: {
+                if AppServiceManager.shared.daemonStatus != .enabled {
+                    throw PreventSleepError.helperNotInstalled
+                }
+                return try await client.setPreventSleep($0)
+            }
         )
 
         statusController = StatusItemController(
@@ -22,13 +32,14 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             onGuidedRemoval: { [weak self] in self?.performGuidedRemoval() }
         )
 
-        // Register daemon if not yet registered
-        if AppServiceManager.shared.daemonStatus == .notRegistered {
+        // Register daemon if not yet registered or not found
+        let daemonStatus = AppServiceManager.shared.daemonStatus
+        if daemonStatus == .notRegistered || daemonStatus == .notFound {
             try? AppServiceManager.shared.registerDaemon()
         }
 
-        // Show setup if approval required
-        if AppServiceManager.shared.daemonStatus == .requiresApproval {
+        // Show setup if approval required or not yet enabled
+        if AppServiceManager.shared.daemonStatus != .enabled {
             showSetupWindow()
         }
 
@@ -74,10 +85,30 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if alert.runModal() == .alertFirstButtonReturn {
             Task {
+                var settingChanged = false
                 do {
                     // 1. Force setting to OFF and confirm readback
                     _ = try await coordinator.forceSet(false)
+                    settingChanged = true
+                } catch {
+                    // Check if current system setting is already OFF
+                    let currentPmset = self.readCurrentSleepDisabled()
+                    if currentPmset == false {
+                        settingChanged = true
+                    } else {
+                        let failureAlert = NSAlert()
+                        failureAlert.messageText = "Could Not Change Sleep Setting"
+                        failureAlert.informativeText = "Could not confirm sleep setting change via helper: \(error.localizedDescription)\n\nWould you like to unregister the helper anyway? You can run 'sudo pmset disablesleep 0' in Terminal to allow sleep manually."
+                        failureAlert.addButton(withTitle: "Unregister Helper Anyway")
+                        failureAlert.addButton(withTitle: "Cancel")
+                        failureAlert.alertStyle = .critical
+                        if failureAlert.runModal() != .alertFirstButtonReturn {
+                            return
+                        }
+                    }
+                }
 
+                do {
                     // 2. Unregister LaunchDaemon
                     try AppServiceManager.shared.unregisterDaemon()
 
@@ -86,16 +117,39 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
                     let infoAlert = NSAlert()
                     infoAlert.messageText = "Helper Removed"
-                    infoAlert.informativeText = "The helper has been unregistered and sleep is now allowed. You can now safely quit and move Prevent Sleep to Trash."
+                    if settingChanged {
+                        infoAlert.informativeText = "The helper has been unregistered and sleep is now allowed. You can now safely quit and move Prevent Sleep to Trash."
+                    } else {
+                        infoAlert.informativeText = "The helper has been unregistered. Remember to run 'sudo pmset disablesleep 0' in Terminal to restore normal sleep."
+                    }
                     infoAlert.runModal()
                 } catch {
                     let errAlert = NSAlert()
-                    errAlert.messageText = "Removal Incomplete"
-                    errAlert.informativeText = "Could not confirm sleep setting change: \(error.localizedDescription)\n\nThe helper was not unregistered."
+                    errAlert.messageText = "Unregister Failed"
+                    errAlert.informativeText = "Failed to unregister helper daemon: \(error.localizedDescription)"
                     errAlert.alertStyle = .critical
                     errAlert.runModal()
                 }
             }
         }
+    }
+
+    private nonisolated func readCurrentSleepDisabled() -> Bool? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
+        process.arguments = ["-g"]
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        do {
+            try process.run()
+            process.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let out = String(data: data, encoding: .utf8) {
+                return try? PowerSettingParser.parseSleepDisabled(from: out)
+            }
+        } catch {
+            return nil
+        }
+        return nil
     }
 }

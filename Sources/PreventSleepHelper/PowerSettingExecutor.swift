@@ -75,7 +75,7 @@ public final class PowerSettingExecutor: @unchecked Sendable {
             let writeResult = try runner.run(
                 executable: pmsetPath,
                 arguments: ["disablesleep", arg],
-                timeoutSeconds: 5.0
+                timeoutSeconds: 10.0
             )
 
             guard writeResult.exitCode == 0 else {

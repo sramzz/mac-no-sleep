@@ -107,13 +107,20 @@ public final class SetupViewModel: ObservableObject {
         case .requiresApproval:
             self.isApproved = false
             self.statusText = "Approval required in System Settings."
-        case .notRegistered:
+        case .notRegistered, .notFound:
             self.isApproved = false
-            self.statusText = "Helper is not registered."
-            try? AppServiceManager.shared.registerDaemon()
-        case .notFound:
-            self.isApproved = false
-            self.statusText = "Helper executable or plist not found."
+            do {
+                try AppServiceManager.shared.registerDaemon()
+                let newStatus = AppServiceManager.shared.daemonStatus
+                if newStatus == .enabled {
+                    self.isApproved = true
+                    self.statusText = "Helper is installed and active."
+                } else {
+                    self.statusText = "Approval required in System Settings."
+                }
+            } catch {
+                self.statusText = "Registration: \(error.localizedDescription)"
+            }
         @unknown default:
             self.isApproved = false
             self.statusText = "Unknown status (\(status.rawValue))."

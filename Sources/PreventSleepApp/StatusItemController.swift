@@ -45,8 +45,12 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
         if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
             statusItem.menu?.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height), in: sender)
         } else {
-            Task {
-                await coordinator.toggle()
+            if currentOperationalState == .setupRequired {
+                onOpenSetup()
+            } else {
+                Task {
+                    await coordinator.toggle()
+                }
             }
         }
     }

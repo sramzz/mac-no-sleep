@@ -5,7 +5,7 @@ import Foundation
     func setPreventSleep(_ enabled: Bool, withReply reply: @escaping (NSNumber?, NSString?) -> Void)
 }
 
-public enum PreventSleepError: Error, Equatable, Sendable {
+public enum PreventSleepError: Error, LocalizedError, Equatable, Sendable {
     case missingField
     case malformedOutput(String)
     case commandFailed(exitCode: Int32, message: String)
@@ -14,6 +14,10 @@ public enum PreventSleepError: Error, Equatable, Sendable {
     case unauthorizedClient(String)
     case helperNotInstalled
     case helperUnreachable(String)
+
+    public var errorDescription: String? {
+        localizedDescription
+    }
 
     public var localizedDescription: String {
         switch self {
