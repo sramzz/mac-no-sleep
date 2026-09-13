@@ -11,7 +11,6 @@ public final class HelperClient: Sendable {
     private func createConnection() -> NSXPCConnection {
         let conn = NSXPCConnection(machServiceName: machServiceName, options: .privileged)
         conn.remoteObjectInterface = NSXPCInterface(with: PreventSleepXPCProtocol.self)
-        conn.resume()
         return conn
     }
 
