@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.sramzz.mac-no-sleep.helper</string>
+    <key>MachServices</key>
+    <dict>
+        <key>com.sramzz.mac-no-sleep.helper</key>
+        <true/>
+    </dict>
+    <key>BundleProgram</key>
+    <string>Contents/Library/LaunchDaemons/com.sramzz.mac-no-sleep.helper</string>
+</dict>
+</plist>
