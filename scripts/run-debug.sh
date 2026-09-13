@@ -18,8 +18,13 @@ if [ -z "$BUILT_APP" ] || [ ! -d "$BUILT_APP" ]; then
 fi
 
 echo "Signing helper and debug bundle..."
-codesign -s - --force -i "com.sramzz.mac-no-sleep.helper" "$BUILT_APP/Contents/Library/LaunchDaemons/com.sramzz.mac-no-sleep.helper"
-codesign -s - --force "$BUILT_APP"
+SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Apple Development" | head -n 1 | awk -F'"' '{print $2}' || true)
+if [ -z "$SIGNING_IDENTITY" ]; then
+    SIGNING_IDENTITY="-"
+fi
+echo "Using code signing identity: $SIGNING_IDENTITY"
+codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.sramzz.mac-no-sleep.helper" "$BUILT_APP/Contents/MacOS/com.sramzz.mac-no-sleep.helper"
+codesign -s "$SIGNING_IDENTITY" -o runtime --force "$BUILT_APP"
 
 echo "Registering with LaunchServices..."
 /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted "$BUILT_APP"
@@ -29,4 +34,4 @@ killall PreventSleep 2>/dev/null || true
 
 echo "=== Launching in foreground (Debug Mode) ==="
 echo "Press Ctrl+C to stop."
-exec "$BUILT_APP/Contents/MacOS/PreventSleep"
+exec "$BUILT_APP/Contents/MacOS/PreventSleep" "$@"

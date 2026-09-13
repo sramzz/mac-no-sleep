@@ -14,7 +14,7 @@
         <string>com.sramzz.mac-no-sleep</string>
     </array>
     <key>BundleProgram</key>
-    <string>Contents/Library/LaunchDaemons/com.sramzz.mac-no-sleep.helper</string>
+    <string>Contents/MacOS/com.sramzz.mac-no-sleep.helper</string>
     <key>StandardErrorPath</key>
     <string>/tmp/com.sramzz.mac-no-sleep.helper.err</string>
     <key>StandardOutPath</key>

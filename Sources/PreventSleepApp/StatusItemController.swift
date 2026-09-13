@@ -43,12 +43,16 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
 
     @objc private func handleStatusItemClick(_ sender: NSStatusBarButton) {
         let event = NSApp.currentEvent
-        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
+        let isRightClick = event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true
+        AppLogger.shared.debug("StatusItem", "Status item clicked (isRightClick: \(isRightClick), state: \(currentOperationalState))")
+        if isRightClick {
             statusItem.menu?.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height), in: sender)
         } else {
             if currentOperationalState == .setupRequired {
+                AppLogger.shared.info("StatusItem", "Setup is required. Opening setup window.")
                 onOpenSetup()
             } else {
+                AppLogger.shared.info("StatusItem", "Left click detected. Triggering coordinator.toggle().")
                 Task {
                     await coordinator.toggle()
                 }
@@ -59,6 +63,7 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
     public func update(state: OperationalState) {
         self.currentOperationalState = state
         let presentation = StatusPresentation.forState(state)
+        AppLogger.shared.debug("StatusItem", "Updating UI icon for state: \(state) -> symbol: '\(presentation.symbolName)', tooltip: '\(presentation.tooltip)'")
 
         if let button = statusItem.button {
             button.image = presentation.image

@@ -18,13 +18,27 @@ if [ -z "$BUILT_APP" ] || [ ! -d "$BUILT_APP" ]; then
 fi
 
 echo "Built app at: $BUILT_APP"
-echo "Signing helper and app bundle with ad-hoc signature..."
-codesign -s - --force -i "com.sramzz.mac-no-sleep.helper" "$BUILT_APP/Contents/Library/LaunchDaemons/com.sramzz.mac-no-sleep.helper"
-codesign -s - --force "$BUILT_APP"
+SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Apple Development" | head -n 1 | awk -F'"' '{print $2}' || true)
+if [ -z "$SIGNING_IDENTITY" ]; then
+    SIGNING_IDENTITY="-"
+fi
+echo "Using code signing identity: $SIGNING_IDENTITY"
+codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.sramzz.mac-no-sleep.helper" "$BUILT_APP/Contents/MacOS/com.sramzz.mac-no-sleep.helper"
+codesign -s "$SIGNING_IDENTITY" -o runtime --force "$BUILT_APP"
 
 echo "Verifying code signatures..."
 codesign --verify --deep --strict "$BUILT_APP"
 
 echo "=== Build and Verification Complete ==="
-echo "To install to /Applications, run:"
-echo "  cp -R \"$BUILT_APP\" /Applications/"
+if [[ "${1:-}" == "--install" || "${1:-}" == "-i" ]]; then
+    echo "Installing to /Applications..."
+    rm -rf /Applications/PreventSleep.app
+    cp -R "$BUILT_APP" /Applications/
+    /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted /Applications/PreventSleep.app
+    echo "Installed to /Applications/PreventSleep.app"
+else
+    echo "To install to /Applications, run:"
+    echo "  ./scripts/build-and-install.sh --install"
+    echo "or:"
+    echo "  cp -R \"$BUILT_APP\" /Applications/"
+fi

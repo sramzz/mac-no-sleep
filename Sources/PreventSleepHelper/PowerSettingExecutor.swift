@@ -72,6 +72,7 @@ public final class PowerSettingExecutor: @unchecked Sendable {
 
         let arg = enabled ? "1" : "0"
         do {
+            AppLogger.shared.info("PowerExecutor", "⚡ Executing pmset disablesleep \(arg)...")
             let writeResult = try runner.run(
                 executable: pmsetPath,
                 arguments: ["disablesleep", arg],
@@ -79,8 +80,11 @@ public final class PowerSettingExecutor: @unchecked Sendable {
             )
 
             guard writeResult.exitCode == 0 else {
+                AppLogger.shared.error("PowerExecutor", "pmset disablesleep \(arg) exited with code \(writeResult.exitCode): \(writeResult.stderr)")
                 throw PreventSleepError.commandFailed(exitCode: writeResult.exitCode, message: writeResult.stderr)
             }
+
+            AppLogger.shared.debug("PowerExecutor", "pmset write completed with exitCode 0. Verifying with readback...")
 
             // Confirmed readback immediately
             let readbackResult = try runner.run(
@@ -90,11 +94,14 @@ public final class PowerSettingExecutor: @unchecked Sendable {
             )
 
             guard readbackResult.exitCode == 0 else {
+                AppLogger.shared.error("PowerExecutor", "pmset -g readback exited with code \(readbackResult.exitCode): \(readbackResult.stderr)")
                 throw PreventSleepError.commandFailed(exitCode: readbackResult.exitCode, message: readbackResult.stderr)
             }
 
             let observed = try PowerSettingParser.parseSleepDisabled(from: readbackResult.stdout)
+            AppLogger.shared.info("PowerExecutor", "Readback observed SleepDisabled = \(observed) (expected = \(enabled))")
             guard observed == enabled else {
+                AppLogger.shared.error("PowerExecutor", "Readback mismatch! Expected \(enabled), observed \(observed)")
                 throw PreventSleepError.mismatchedReadback(expected: enabled, actual: observed)
             }
 
@@ -102,6 +109,7 @@ public final class PowerSettingExecutor: @unchecked Sendable {
         } catch let err as PreventSleepError {
             throw err
         } catch {
+            AppLogger.shared.error("PowerExecutor", "Unexpected error executing pmset: \(error.localizedDescription)")
             throw PreventSleepError.commandFailed(exitCode: -1, message: error.localizedDescription)
         }
     }

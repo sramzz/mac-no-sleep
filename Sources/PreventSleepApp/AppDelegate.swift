@@ -9,22 +9,29 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     private var pollingTimer: Timer?
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
+        AppLogger.shared.info("AppDelegate", "Application did finish launching (PID: \(ProcessInfo.processInfo.processIdentifier)). Log level: \(AppLogger.shared.level.label)")
+
         let client = HelperClient()
 
         coordinator = StateCoordinator(
             fetchHandler: { [weak self] in
                 if AppServiceManager.shared.daemonStatus != .enabled {
+                    AppLogger.shared.debug("AppDelegate", "Daemon status is not enabled (\(AppServiceManager.shared.daemonStatus.rawValue)), throwing helperNotInstalled")
                     throw PreventSleepError.helperNotInstalled
                 }
                 if let current = self?.readCurrentSleepDisabled() {
+                    AppLogger.shared.trace("AppDelegate", "Direct pmset read returned: \(current)")
                     return current
                 }
+                AppLogger.shared.debug("AppDelegate", "Direct read returned nil, falling back to helper XPC")
                 return try await client.getState()
             },
             mutateHandler: {
                 if AppServiceManager.shared.daemonStatus != .enabled {
+                    AppLogger.shared.error("AppDelegate", "Cannot mutate: daemon status is \(AppServiceManager.shared.daemonStatus.rawValue)")
                     throw PreventSleepError.helperNotInstalled
                 }
+                AppLogger.shared.info("AppDelegate", "Dispatching mutation via HelperClient: setPreventSleep(\($0))")
                 return try await client.setPreventSleep($0)
             }
         )
@@ -36,15 +43,23 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         // Register daemon with launchd
-        try? AppServiceManager.shared.registerDaemon()
+        AppLogger.shared.info("AppDelegate", "Registering LaunchDaemon via SMAppService...")
+        do {
+            try AppServiceManager.shared.registerDaemon()
+            AppLogger.shared.info("AppDelegate", "SMAppService register daemon succeeded. Status: \(AppServiceManager.shared.daemonStatus.rawValue)")
+        } catch {
+            AppLogger.shared.warning("AppDelegate", "SMAppService register daemon notice: \(error.localizedDescription) (Status: \(AppServiceManager.shared.daemonStatus.rawValue))")
+        }
 
         // Show setup if approval required or not yet enabled
         if AppServiceManager.shared.daemonStatus != .enabled {
+            AppLogger.shared.info("AppDelegate", "Daemon not enabled (status \(AppServiceManager.shared.daemonStatus.rawValue)). Showing Setup window.")
             showSetupWindow()
         }
 
         // Initial refresh
         Task {
+            AppLogger.shared.debug("AppDelegate", "Triggering initial state refresh...")
             await coordinator.refresh()
         }
 
@@ -61,6 +76,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil,
             queue: .main
         ) { [weak self] _ in
+            AppLogger.shared.info("AppDelegate", "System did wake from sleep notification received. Refreshing state.")
             Task { [weak self] in
                 await self?.coordinator.refresh()
             }

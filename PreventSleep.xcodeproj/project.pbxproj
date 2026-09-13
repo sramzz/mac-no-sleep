@@ -12,6 +12,7 @@
 		4A163F27A906A67AC6D1A2FA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE82676E3366922EA437E216 /* AppDelegate.swift */; };
 		4CF0FC4F606B221AD4D02824 /* libPreventSleepCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B285B8CAEDBC27ADA04A7B20 /* libPreventSleepCore.a */; };
 		5257B0ECE8B96BF8BF2E81A7 /* StateCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28A00DAA4FB2B9A6AEEFAD3A /* StateCoordinatorTests.swift */; };
+		52E61DA1A4CFE448F3E5004A /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0E870FBD174060DEB92949 /* AppLogger.swift */; };
 		5D071DC3ACA1D4C7732C7160 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A40C30C32F688CC021F92BB /* main.swift */; };
 		5ED01470DA3A820738772395 /* HelperClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C3E6E7BEE33E2E22B3E575 /* HelperClient.swift */; };
 		6498EEE94E45CD31713D465D /* StatusIconRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F98C55F7B7FA68C3E355488 /* StatusIconRendererTests.swift */; };
@@ -79,6 +80,7 @@
 		3B0DB93264DDC3B85CBBC00A /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		3FEAA615AF3D71AA266CE29A /* PreventSleepTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PreventSleepTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F6F5DCAD05F9D72D24427BC /* PowerSettingExecutorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerSettingExecutorTests.swift; sourceTree = "<group>"; };
+		6E0E870FBD174060DEB92949 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 		77122CD6B250191ECDC5DAE2 /* PowerSettingParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerSettingParser.swift; sourceTree = "<group>"; };
 		7B04279E795F062D9CF16657 /* StateCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateCoordinator.swift; sourceTree = "<group>"; };
 		7BA8FE26038689A9DFB06080 /* HelperService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperService.swift; sourceTree = "<group>"; };
@@ -162,6 +164,7 @@
 		9E10D4A7366B9E575DA1ECEB /* PreventSleepCore */ = {
 			isa = PBXGroup;
 			children = (
+				6E0E870FBD174060DEB92949 /* AppLogger.swift */,
 				77122CD6B250191ECDC5DAE2 /* PowerSettingParser.swift */,
 				C518573089961EE14D7CA83B /* PreventSleepProtocol.swift */,
 				7B04279E795F062D9CF16657 /* StateCoordinator.swift */,
@@ -352,7 +355,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "DEST=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchDaemons\"\nmkdir -p \"$DEST\"\ncp \"$BUILT_PRODUCTS_DIR/com.sramzz.mac-no-sleep.helper\" \"$DEST/\"\ncp \"$SRCROOT/Sources/PreventSleepHelper/com.sramzz.mac-no-sleep.helper.plist\" \"$DEST/\"\ncodesign -s - --force -i \"com.sramzz.mac-no-sleep.helper\" \"$DEST/com.sramzz.mac-no-sleep.helper\"\n";
+			shellScript = "DEST_DAEMONS=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchDaemons\"\nDEST_MACOS=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/MacOS\"\nSIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep \"Apple Development\" | head -n 1 | awk -F'\"' '{print $2}' || true)\nif [ -z \"$SIGNING_IDENTITY\" ]; then\n    SIGNING_IDENTITY=\"-\"\nfi\nmkdir -p \"$DEST_DAEMONS\"\nmkdir -p \"$DEST_MACOS\"\nrm -f \"$DEST_DAEMONS/com.sramzz.mac-no-sleep.helper\"\ncp \"$BUILT_PRODUCTS_DIR/com.sramzz.mac-no-sleep.helper\" \"$DEST_MACOS/\"\ncp \"$SRCROOT/Sources/PreventSleepHelper/com.sramzz.mac-no-sleep.helper.plist\" \"$DEST_DAEMONS/\"\ncodesign -s \"$SIGNING_IDENTITY\" -o runtime --force -i \"com.sramzz.mac-no-sleep.helper\" \"$DEST_MACOS/com.sramzz.mac-no-sleep.helper\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -386,6 +389,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52E61DA1A4CFE448F3E5004A /* AppLogger.swift in Sources */,
 				D8378AC9516D960575DBD860 /* PowerSettingParser.swift in Sources */,
 				C6B644084445CA9B49854669 /* PreventSleepProtocol.swift in Sources */,
 				10EF9B2EF45A9570DC6E79B8 /* StateCoordinator.swift in Sources */,

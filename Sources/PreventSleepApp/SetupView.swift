@@ -100,19 +100,24 @@ public final class SetupViewModel: ObservableObject {
 
     public func checkStatus() {
         let status = AppServiceManager.shared.daemonStatus
+        AppLogger.shared.info("SetupView", "Checking helper daemon status: \(status.rawValue)")
         switch status {
         case .enabled:
             try? AppServiceManager.shared.registerDaemon()
             self.isApproved = true
             self.statusText = "Helper is installed and active."
+            AppLogger.shared.info("SetupView", "Helper is enabled and active.")
         case .requiresApproval:
             self.isApproved = false
             self.statusText = "Approval required in System Settings."
+            AppLogger.shared.warning("SetupView", "Helper requires user approval in System Settings.")
         case .notRegistered, .notFound:
             self.isApproved = false
+            AppLogger.shared.info("SetupView", "Daemon is \(status.rawValue == 0 ? "notRegistered" : "notFound"). Attempting registration...")
             do {
                 try AppServiceManager.shared.registerDaemon()
                 let newStatus = AppServiceManager.shared.daemonStatus
+                AppLogger.shared.info("SetupView", "Registration completed. New status: \(newStatus.rawValue)")
                 if newStatus == .enabled {
                     self.isApproved = true
                     self.statusText = "Helper is installed and active."
@@ -120,6 +125,7 @@ public final class SetupViewModel: ObservableObject {
                     self.statusText = "Approval required in System Settings."
                 }
             } catch {
+                AppLogger.shared.error("SetupView", "Registration failed: \(error.localizedDescription)")
                 self.statusText = "Registration: \(error.localizedDescription)"
             }
         @unknown default:
@@ -133,6 +139,7 @@ public final class SetupViewModel: ObservableObject {
     }
 
     public func openSystemSettings() {
+        AppLogger.shared.info("SetupView", "Opening System Settings -> Login Items & Extensions...")
         AppServiceManager.shared.openLoginItemsSettings()
     }
 
