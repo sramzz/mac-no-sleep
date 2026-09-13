@@ -37,7 +37,7 @@ public enum LogLevel: Int, Comparable, Sendable, CaseIterable {
 
     public static func from(string: String) -> LogLevel? {
         switch string.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) {
-        case "none", "off", "0": return .none
+        case "none", "off", "0": return LogLevel.none
         case "error", "err", "1": return .error
         case "warning", "warn", "2": return .warning
         case "info", "3": return .info
