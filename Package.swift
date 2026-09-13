@@ -10,7 +10,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "PreventSleepCore"),
-        .target(name: "PreventSleepHelperLib", dependencies: ["PreventSleepCore"], path: "Sources/PreventSleepHelper", exclude: ["com.sramzz.mac-no-sleep.helper.plist"]),
+        .target(name: "PreventSleepHelperLib", dependencies: ["PreventSleepCore"], path: "Sources/PreventSleepHelper", exclude: ["main.swift"]),
         .testTarget(name: "PreventSleepCoreTests", dependencies: ["PreventSleepCore", "PreventSleepHelperLib"])
     ]
 )
