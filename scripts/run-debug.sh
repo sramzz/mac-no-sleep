@@ -32,12 +32,14 @@ if [ -f "$BUILT_APP/Contents/MacOS/com.sramzz.mac-no-sleep.helper" ]; then
 fi
 codesign -s "$SIGNING_IDENTITY" -o runtime --force "$BUILT_APP"
 
-echo "Registering with LaunchServices..."
-/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted "$BUILT_APP"
+echo "Installing to /Applications/PreventSleep.app..."
+rm -rf /Applications/PreventSleep.app
+cp -R "$BUILT_APP" /Applications/
+/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted /Applications/PreventSleep.app
 
 echo "Terminating any existing instance..."
 killall PreventSleep 2>/dev/null || true
 
 echo "=== Launching in foreground (Debug Mode) ==="
 echo "Press Ctrl+C to stop."
-exec "$BUILT_APP/Contents/MacOS/PreventSleep" "$@"
+exec /Applications/PreventSleep.app/Contents/MacOS/PreventSleep "$@"
