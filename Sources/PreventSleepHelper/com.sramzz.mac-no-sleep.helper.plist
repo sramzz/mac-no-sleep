@@ -9,7 +9,15 @@
         <key>com.sramzz.mac-no-sleep.helper</key>
         <true/>
     </dict>
+    <key>AssociatedBundleIdentifiers</key>
+    <array>
+        <string>com.sramzz.mac-no-sleep</string>
+    </array>
     <key>BundleProgram</key>
     <string>Contents/Library/LaunchDaemons/com.sramzz.mac-no-sleep.helper</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/com.sramzz.mac-no-sleep.helper.err</string>
+    <key>StandardOutPath</key>
+    <string>/tmp/com.sramzz.mac-no-sleep.helper.out</string>
 </dict>
 </plist>

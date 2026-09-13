@@ -18,8 +18,9 @@ if [ -z "$BUILT_APP" ] || [ ! -d "$BUILT_APP" ]; then
 fi
 
 echo "Built app at: $BUILT_APP"
-echo "Signing app bundle with ad-hoc signature..."
-codesign -s - --force --deep "$BUILT_APP"
+echo "Signing helper and app bundle with ad-hoc signature..."
+codesign -s - --force -i "com.sramzz.mac-no-sleep.helper" "$BUILT_APP/Contents/Library/LaunchDaemons/com.sramzz.mac-no-sleep.helper"
+codesign -s - --force "$BUILT_APP"
 
 echo "Verifying code signatures..."
 codesign --verify --deep --strict "$BUILT_APP"

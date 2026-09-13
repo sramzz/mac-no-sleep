@@ -12,9 +12,12 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         let client = HelperClient()
 
         coordinator = StateCoordinator(
-            fetchHandler: {
+            fetchHandler: { [weak self] in
                 if AppServiceManager.shared.daemonStatus != .enabled {
                     throw PreventSleepError.helperNotInstalled
+                }
+                if let current = self?.readCurrentSleepDisabled() {
+                    return current
                 }
                 return try await client.getState()
             },
@@ -32,11 +35,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             onGuidedRemoval: { [weak self] in self?.performGuidedRemoval() }
         )
 
-        // Register daemon if not yet registered or not found
-        let daemonStatus = AppServiceManager.shared.daemonStatus
-        if daemonStatus == .notRegistered || daemonStatus == .notFound {
-            try? AppServiceManager.shared.registerDaemon()
-        }
+        // Register daemon with launchd
+        try? AppServiceManager.shared.registerDaemon()
 
         // Show setup if approval required or not yet enabled
         if AppServiceManager.shared.daemonStatus != .enabled {

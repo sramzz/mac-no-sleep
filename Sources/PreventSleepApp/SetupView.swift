@@ -102,6 +102,7 @@ public final class SetupViewModel: ObservableObject {
         let status = AppServiceManager.shared.daemonStatus
         switch status {
         case .enabled:
+            try? AppServiceManager.shared.registerDaemon()
             self.isApproved = true
             self.statusText = "Helper is installed and active."
         case .requiresApproval:

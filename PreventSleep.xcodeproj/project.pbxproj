@@ -352,7 +352,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "DEST=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchDaemons\"\nmkdir -p \"$DEST\"\ncp \"$BUILT_PRODUCTS_DIR/com.sramzz.mac-no-sleep.helper\" \"$DEST/\"\ncp \"$SRCROOT/Sources/PreventSleepHelper/com.sramzz.mac-no-sleep.helper.plist\" \"$DEST/\"\ncodesign -s - --force \"$DEST/com.sramzz.mac-no-sleep.helper\"\n";
+			shellScript = "DEST=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchDaemons\"\nmkdir -p \"$DEST\"\ncp \"$BUILT_PRODUCTS_DIR/com.sramzz.mac-no-sleep.helper\" \"$DEST/\"\ncp \"$SRCROOT/Sources/PreventSleepHelper/com.sramzz.mac-no-sleep.helper.plist\" \"$DEST/\"\ncodesign -s - --force -i \"com.sramzz.mac-no-sleep.helper\" \"$DEST/com.sramzz.mac-no-sleep.helper\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

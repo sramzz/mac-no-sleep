@@ -56,7 +56,7 @@ targets:
           mkdir -p "$DEST"
           cp "$BUILT_PRODUCTS_DIR/com.sramzz.mac-no-sleep.helper" "$DEST/"
           cp "$SRCROOT/Sources/PreventSleepHelper/com.sramzz.mac-no-sleep.helper.plist" "$DEST/"
-          codesign -s - --force "$DEST/com.sramzz.mac-no-sleep.helper"
+          codesign -s - --force -i "com.sramzz.mac-no-sleep.helper" "$DEST/com.sramzz.mac-no-sleep.helper"
 
   PreventSleepTests:
     type: bundle.unit-test
