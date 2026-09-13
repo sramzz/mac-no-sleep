@@ -61,6 +61,11 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         Task {
             AppLogger.shared.debug("AppDelegate", "Triggering initial state refresh...")
             await coordinator.refresh()
+            if AppServiceManager.shared.daemonStatus != .enabled {
+                await MainActor.run { [weak self] in
+                    self?.showSetupWindow()
+                }
+            }
         }
 
         // Background polling every 1 second

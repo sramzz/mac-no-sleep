@@ -103,7 +103,6 @@ public final class SetupViewModel: ObservableObject {
         AppLogger.shared.info("SetupView", "Checking helper daemon status: \(status.rawValue)")
         switch status {
         case .enabled:
-            try? AppServiceManager.shared.registerDaemon()
             self.isApproved = true
             self.statusText = "Helper is installed and active."
             AppLogger.shared.info("SetupView", "Helper is enabled and active.")
