@@ -16,7 +16,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         coordinator = StateCoordinator(
             fetchHandler: { [weak self] in
                 if AppServiceManager.shared.daemonStatus != .enabled {
-                    AppLogger.shared.debug("AppDelegate", "Daemon status is not enabled (\(AppServiceManager.shared.daemonStatus.rawValue)), throwing helperNotInstalled")
+                    AppLogger.shared.trace("AppDelegate", "Daemon status is not enabled (\(AppServiceManager.shared.daemonStatus.rawValue)), throwing helperNotInstalled")
                     throw PreventSleepError.helperNotInstalled
                 }
                 if let current = self?.readCurrentSleepDisabled() {

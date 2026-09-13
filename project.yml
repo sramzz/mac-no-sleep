@@ -64,6 +64,7 @@ targets:
           cp "$BUILT_PRODUCTS_DIR/com.sramzz.mac-no-sleep.helper" "$DEST_MACOS/"
           cp "$SRCROOT/Sources/PreventSleepHelper/com.sramzz.mac-no-sleep.helper.plist" "$DEST_DAEMONS/"
           codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.sramzz.mac-no-sleep.helper" "$DEST_MACOS/com.sramzz.mac-no-sleep.helper"
+          find "$DEST_MACOS" -name "*.dylib" -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
 
   PreventSleepTests:
     type: bundle.unit-test

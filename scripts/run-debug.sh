@@ -17,13 +17,16 @@ if [ -z "$BUILT_APP" ] || [ ! -d "$BUILT_APP" ]; then
     exit 1
 fi
 
-echo "Signing helper and debug bundle..."
+echo "Signing helper, dynamic libraries, and debug bundle..."
 SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Apple Development" | head -n 1 | awk -F'"' '{print $2}' || true)
 if [ -z "$SIGNING_IDENTITY" ]; then
     SIGNING_IDENTITY="-"
 fi
 echo "Using code signing identity: $SIGNING_IDENTITY"
-codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.sramzz.mac-no-sleep.helper" "$BUILT_APP/Contents/MacOS/com.sramzz.mac-no-sleep.helper"
+find "$BUILT_APP/Contents/MacOS" -type f \( -name "*.dylib" -o -name "com.sramzz.*" \) -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
+if [ -d "$BUILT_APP/Contents/Frameworks" ]; then
+    find "$BUILT_APP/Contents/Frameworks" -type f \( -name "*.dylib" -o -perm +111 \) -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
+fi
 codesign -s "$SIGNING_IDENTITY" -o runtime --force "$BUILT_APP"
 
 echo "Registering with LaunchServices..."
