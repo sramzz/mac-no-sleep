@@ -23,9 +23,12 @@ if [ -z "$SIGNING_IDENTITY" ]; then
     SIGNING_IDENTITY="-"
 fi
 echo "Using code signing identity: $SIGNING_IDENTITY"
-find "$BUILT_APP/Contents/MacOS" -type f \( -name "*.dylib" -o -name "com.sramzz.*" \) -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
+find "$BUILT_APP/Contents/MacOS" -name "*.dylib" -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
 if [ -d "$BUILT_APP/Contents/Frameworks" ]; then
     find "$BUILT_APP/Contents/Frameworks" -type f \( -name "*.dylib" -o -perm +111 \) -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
+fi
+if [ -f "$BUILT_APP/Contents/MacOS/com.sramzz.mac-no-sleep.helper" ]; then
+    codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.sramzz.mac-no-sleep.helper" "$BUILT_APP/Contents/MacOS/com.sramzz.mac-no-sleep.helper"
 fi
 codesign -s "$SIGNING_IDENTITY" -o runtime --force "$BUILT_APP"
 
