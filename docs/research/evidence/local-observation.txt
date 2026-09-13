@@ -1,0 +1,6 @@
+Research observation, 2026-09-13
+macOS 26.5.2 (25F84)
+Command: pmset -g
+System-wide power settings:
+ SleepDisabled 1
+No settings changed.
