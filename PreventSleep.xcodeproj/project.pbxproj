@@ -510,6 +510,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/PreventSleepApp/Resources/PreventSleep.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = Sources/PreventSleepApp/Resources/Info.plist;
+				INFOPLIST_KEY_LSUIElement = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -550,6 +551,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/PreventSleepApp/Resources/PreventSleep.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = Sources/PreventSleepApp/Resources/Info.plist;
+				INFOPLIST_KEY_LSUIElement = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

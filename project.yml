@@ -45,10 +45,13 @@ targets:
         embed: false
     info:
       path: Sources/PreventSleepApp/Resources/Info.plist
+      properties:
+        LSUIElement: true
     settings:
       PRODUCT_NAME: PreventSleep
       PRODUCT_BUNDLE_IDENTIFIER: com.sramzz.mac-no-sleep
       CODE_SIGN_ENTITLEMENTS: Sources/PreventSleepApp/Resources/PreventSleep.entitlements
+      INFOPLIST_KEY_LSUIElement: YES
     postBuildScripts:
       - name: Embed Helper and Daemon Plist
         script: |
