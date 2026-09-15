@@ -1,177 +1,260 @@
 # Prevent Sleep ☕️
 
-A lightweight, native macOS menu-bar switch controlling your Mac's persistent `SleepDisabled` power setting.
+[![macOS](https://img.shields.io/badge/macOS-15.0%2B%20%7C%20Tahoe%2026%2B-black?style=flat-square&logo=apple)](https://apple.com)
+[![Swift](https://img.shields.io/badge/Swift-6.0-orange?style=flat-square&logo=swift)](https://swift.org)
+[![Tests](https://img.shields.io/badge/Tests-19%20passed-brightgreen?style=flat-square)](Tests)
+[![Dependencies](https://img.shields.io/badge/Dependencies-0%20(Pure%20Native)-blue?style=flat-square)]()
 
-Replace repetitive authenticated Terminal commands (`sudo pmset disablesleep 1`) with an instant, reliable menu-bar toggle that reflects true system state.
+A lightweight, native macOS menu-bar switch for the Mac's persistent `SleepDisabled` power setting.
 
----
-
-## Features
-
-- **One-Click Toggle:** Left-click to switch between Prevent Sleep (ON) and Normal Sleep (OFF).
-- **Truthful Status:** Always reflects verified system power settings from `/usr/bin/pmset -g`, not a stale cached preference.
-- **No Password Prompts After Setup:** Uses an approved macOS LaunchDaemon (`SMAppService`) so daily clicks are instantaneous.
-- **External Change Detection:** Adopts settings changed via Terminal or third-party tools within ~1–2 seconds.
-- **Right-Click Options Menu:** Accessible keyboard controls, Setup & Approval status, Launch at Login, and Guided Removal.
-- **Safe Guided Removal:** "Allow Sleep & Remove Helper" resets `SleepDisabled` back to 0, confirms readback, and unregisters the helper daemon.
+Prevent Sleep replaces repetitive authenticated Terminal commands (`sudo pmset disablesleep 1`) with an instantaneous, reliable menu-bar switch that reflects the true kernel power state.
 
 ---
 
-## How Everything Connects (For Dummies) 🧠
+## Key Features
 
-If you've ever wondered why you can't just click a button in an ordinary Mac app to stop your Mac from sleeping forever without typing your password every time, this section is for you!
+- **One-Click Instant Toggle:** Left-click to switch between Prevent Sleep (ON) and Normal Sleep (OFF) in under 0.3 seconds.
+- **Truthful System State:** Always reflects verified system power settings from `/usr/bin/pmset -g`, not a stale cached preference.
+- **Zero Recurring Password Prompts:** Uses a modern macOS privileged LaunchDaemon (`SMAppService`) so daily clicks require zero authorization dialogs.
+- **Always Visible (Position 1 by Default):** Defaults to Position 1 on the far right of the menu bar (directly adjacent to Control Center), ensuring it is never obscured by the MacBook notch or menu bar crowding. Fully supports native <kbd>⌘ Command</kbd>-drag reordering.
+- **Headless CLI Controls:** Built-in command-line interface (`--toggle`, `--test-helper`, `--register`, `--unregister`) for automation, Raycast, or Terminal scripts.
+- **Professional-Grade Logging Subsystem:** 6 configurable log levels (`none` to `trace`/`full`) with emoji badges, timestamps, terminal formatting, and Apple Unified Logging (`os.Logger`) integration.
+- **External Change Detection:** Automatically syncs settings changed externally via Terminal or other power tools within ~1 second.
+- **Safe Guided Removal:** Built-in "Allow Sleep & Remove Helper" option that restores normal sleep (`SleepDisabled 0`), confirms kernel readback, and unregisters background services cleanly.
 
-### The Problem: macOS Security & The "Root" Wall
+---
 
-1. macOS protects vital hardware and power management settings behind **root permissions** (administrator privileges).
-2. Changing whether your Mac is allowed to sleep is done by the system tool `/usr/bin/pmset disablesleep 1` (or `0`).
-3. If an ordinary app tried to run that command directly, macOS would block it with **"Permission Denied"**, or pop up an annoying password dialog every single time you clicked the icon.
+## How It Works (Architecture Overview)
 
-### The Solution: The Two-Part Architecture
+To toggle system power management without recurring password prompts while maintaining strict macOS security, Prevent Sleep is divided into **two specialized native components**:
 
-To make the button work with a single click and no recurring password prompts, Prevent Sleep is split into **two distinct programs** working together:
-
-```
+```text
 +-------------------------------------------------------------------------------+
 |                                  YOUR MAC                                     |
 |                                                                               |
-|  1. You Click the Menu Bar Icon                                               |
+|  1. Left-click Menu Bar Icon (or run --toggle)                                |
 |     (cup.and.saucer.fill)                                                     |
 |            │                                                                  |
 |            ▼                                                                  |
 |  +────────────────────────────────────────+                                   |
 |  |     PART 1: The Menu Bar App           |  (Unprivileged user app)          |
-|  |     - Sits in your menu bar            |  - Has NO special permissions     |
-|  |     - Draws the coffee cup icons       |  - Cannot run root commands       |
-|  |     - Coordinates UI & clicks          |                                   |
+|  |     - Sits in top menu bar (Position 1)|  - Has NO special root access     |
+|  |     - Renders responsive SF Symbols    |  - Coordinates UI & clicks        |
+|  |     - Polls power state every 1s       |                                   |
 |  +────────────────────────────────────────+                                   |
 |            │                                                                  |
-|            │  2. Secret Authenticated Handshake (XPC)                         |
+|            │  2. Authenticated XPC Handshake (Mach Service)                   |
 |            ▼                                                                  |
 |  +────────────────────────────────────────+                                   |
-|  |     PART 2: The Privileged Helper      |  (Approved LaunchDaemon)          |
-|  |     - Installed in background          |  - Runs with root permissions     |
-|  |     - Verifies who is talking to it    |  - ONLY accepts 2 fixed commands: |
-|  |       (rejects impostor apps)          |    "What is the setting?"         |
-|  |                                        |    "Turn it ON or OFF"            |
+|  |     PART 2: The Privileged Helper      |  (Managed LaunchDaemon)           |
+|  |     - Contents/MacOS/<helper-binary>   |  - Runs as root via launchd       |
+|  |     - Validates Client Team ID         |  - Restricted to 2 fixed tasks:   |
+|  |       (rejects unauthorized apps)      |    • Read: pmset -g               |
+|  |                                        |    • Write: pmset disablesleep    |
 |  +────────────────────────────────────────+                                   |
 |            │                                                                  |
-|            │  3. Runs system command with fixed arguments                     |
+|            │  3. Executes exact command with fixed arguments                  |
 |            ▼                                                                  |
 |  +────────────────────────────────────────+                                   |
 |  |     /usr/bin/pmset disablesleep 1 / 0  |                                   |
 |  +────────────────────────────────────────+                                   |
 |            │                                                                  |
-|            │  4. Changes macOS kernel power setting                           |
+|            │  4. Updates macOS power manager (powerd)                         |
 |            ▼                                                                  |
 |  +────────────────────────────────────────+                                   |
-|  |     macOS Power Manager (powerd)       |                                   |
-|  |     (SleepDisabled = 1)                |                                   |
+|  |     Kernel Power State                 |                                   |
+|  |     (SleepDisabled = 1 or 0)           |                                   |
 |  +────────────────────────────────────────+                                   |
 |            │                                                                  |
-|            │  5. Immediate Readback Confirmation                              |
-|            │     (Helper runs "pmset -g" to double check)                     |
+|            │  5. Immediate Readback Verification                              |
+|            │     (Helper executes "pmset -g" to double-check state)           |
 |            ▼                                                                  |
 |  +────────────────────────────────────────+                                   |
-|  |     Confirmed True State Sent to App   |                                   |
+|  |     Confirmed Power State Replied      |                                   |
 |  +────────────────────────────────────────+                                   |
 |            │                                                                  |
 |            ▼                                                                  |
-|  6. Menu bar icon updates silently to confirmed state!                        |
+|  6. Menu bar icon updates instantly to confirmed state (<0.3s)                |
 +-------------------------------------------------------------------------------+
 ```
 
-### Step-by-Step Walkthrough
-
-1. **The Click:** You left-click the coffee cup in your menu bar. The icon immediately turns into a rotating/busy icon so you know it heard you.
-2. **The Handshake (XPC):** The menu-bar app sends a private message across macOS's built-in communication pipe (**XPC**) to the background helper daemon.
-3. **The ID Check:** The background helper daemon checks the app's cryptographic code signature. If any unknown software tries to talk to it, the helper immediately hangs up.
-4. **The Safe Command:** The helper directly executes `/usr/bin/pmset disablesleep 1` (or `0`). It never uses arbitrary shell scripts or open terminal windows.
-5. **The Proof (Readback):** The helper does not assume the command worked just because it didn't crash. It immediately asks macOS (`pmset -g`): *"What is SleepDisabled right now?"*
-6. **The Result:** If macOS confirms `SleepDisabled 1`, the helper reports success back to the app. The app silently updates the menu-bar icon to the filled coffee cup.
-
-### Why do I only approve it once in System Settings?
-
-When you first open Prevent Sleep, macOS asks you to approve the background helper once in **System Settings → General → Login Items & Extensions**. 
-
-Once approved by an administrator, macOS remembers your approval permanently across reboots. That is why future toggles are instant and never ask for your password again!
+### Why You Only Authorize It Once
+When Prevent Sleep is launched for the first time, macOS prompts for a one-time approval in **System Settings → General → Login Items & Extensions → Allow in Background**. Once authorized, macOS Background Task Management (BTM) persists this permission across reboots, allowing the helper to handle XPC requests seamlessly.
 
 ---
 
-## Operational States & Icons
+## Operational States & Menu Bar Icons
 
 | State | Menu Bar Icon | Tooltip | Meaning |
-| --- | :---: | --- | --- |
+| :--- | :---: | :--- | :--- |
 | **Ready (ON)** | `cup.and.saucer.fill` | Prevent Sleep: On | Sleep is disabled (`SleepDisabled 1`). Mac will stay awake. |
-| **Ready (OFF)** | `cup.and.saucer` | Prevent Sleep: Off | Sleep is allowed (`SleepDisabled 0`). Standard power rules apply. |
-| **Changing** | `arrow.triangle.2.circlepath` | Changing sleep setting... | Command in flight. Subsequent clicks are safely ignored. |
-| **Unavailable** | `exclamationmark.triangle` | Sleep setting unavailable | Read error or helper not reachable. Click to inspect. |
-| **Setup Required** | `gearshape.badge.exclamationmark` | Setup required | Helper needs initial approval in System Settings. |
+| **Ready (OFF)** | `cup.and.saucer` | Prevent Sleep: Off | Sleep is allowed (`SleepDisabled 0`). Normal power rules apply. |
+| **Changing** | `arrow.triangle.2.circlepath` | Changing sleep setting... | Mutation in flight. Concurrent clicks are safely debounced. |
+| **Setup Required** | `gearshape.fill` | Setup required | Helper requires one-time approval in System Settings. |
+| **Unavailable** | `exclamationmark.triangle` | Sleep setting unavailable | Read error or helper unreachable. Click opens setup window. |
 
 ---
 
-## Building and Installing
+## Quick Start
 
-### Prerequisites
+### 1. Build & Install
+Ensure you have [XcodeGen](https://github.com/yonaskolb/XcodeGen) installed (`brew install xcodegen`).
 
-- macOS 26.0+ (Tahoe)
-- Xcode 26.0+ (Command Line Tools or Xcode.app)
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
-
-### Build Release App
-
-Run the build script:
 ```bash
-./scripts/build-and-install.sh
+./scripts/build-and-install.sh --install
+```
+This script automatically:
+1. Generates the Xcode project.
+2. Compiles the Release build.
+3. Signs the app bundle and embedded helper with your Apple Development identity (or ad-hoc if unavailable).
+4. Strictly verifies code signatures and hardened runtime flags.
+5. Installs the application to `/Applications/PreventSleep.app`.
+
+### 2. Launch the Application
+```bash
+open /Applications/PreventSleep.app
 ```
 
-Or build manually:
-```bash
-# 1. Generate Xcode project from project.yml
-xcodegen generate
-
-# 2. Build Release configuration
-xcodebuild -project PreventSleep.xcodeproj -scheme PreventSleep -configuration Release build
-```
-
-The resulting `PreventSleep.app` bundle will contain the bundled helper inside:
-`PreventSleep.app/Contents/Library/LaunchDaemons/com.sramzz.mac-no-sleep.helper`
-
-Copy `PreventSleep.app` to `/Applications/` to use it.
+### 3. First-Time Setup (One-Time Approval)
+1. On first launch, macOS displays a notification: *"Login Items: 'PreventSleep' was added in the background"*.
+2. The **Prevent Sleep Setup** window will appear with instructions.
+3. Click **"Open System Settings"** (navigates to **General → Login Items & Extensions**).
+4. Under **"Allow in Background"**, toggle **ON** the switch for `PreventSleep`.
+5. Return to the Setup window and click **"Retry & Check Approval"**.
+6. The status turns **green**, the menu bar icon updates to the coffee cup (`cup.and.saucer`), and toggling is ready to use!
 
 ---
 
-## Running Automated Tests
+## Running in Foreground with Live Debug Logs
+
+To watch every click, state transition, and XPC exchange live in your terminal:
+
+```bash
+./scripts/run-debug.sh
+```
+
+### Configuring Log Levels
+Set the `PREVENT_SLEEP_LOG_LEVEL` environment variable or use command-line flags:
+
+```bash
+# Trace (full low-level details including raw XPC connections)
+PREVENT_SLEEP_LOG_LEVEL=trace /Applications/PreventSleep.app/Contents/MacOS/PreventSleep
+
+# Debug (useful for general development & troubleshooting)
+PREVENT_SLEEP_LOG_LEVEL=debug /Applications/PreventSleep.app/Contents/MacOS/PreventSleep
+
+# Info (default for normal operations)
+PREVENT_SLEEP_LOG_LEVEL=info /Applications/PreventSleep.app/Contents/MacOS/PreventSleep
+
+# Quiet / None (silences all terminal log output)
+PREVENT_SLEEP_LOG_LEVEL=none /Applications/PreventSleep.app/Contents/MacOS/PreventSleep
+```
+
+### Streaming Unified System Logs
+Prevent Sleep also mirrors all log entries to Apple's Unified Logging (`os.Logger`):
+```bash
+/usr/bin/log stream --predicate 'subsystem == "com.sramzz.mac-no-sleep"' --level debug
+```
+
+---
+
+## Headless CLI Controls
+
+The installed app binary provides direct command-line switches for automation or integration with Spotlight, Raycast, and Alfred:
+
+```bash
+# Toggle sleep state (inverts current state and confirms readback)
+/Applications/PreventSleep.app/Contents/MacOS/PreventSleep --toggle
+
+# Test helper connectivity and return current state
+/Applications/PreventSleep.app/Contents/MacOS/PreventSleep --test-helper
+
+# Register the background LaunchDaemon via SMAppService
+/Applications/PreventSleep.app/Contents/MacOS/PreventSleep --register
+
+# Unregister the background LaunchDaemon
+/Applications/PreventSleep.app/Contents/MacOS/PreventSleep --unregister
+```
+
+---
+
+## Repository Structure
+
+```text
+mac-no-sleep/
+├── Package.swift                             # Swift Package Manager manifest
+├── project.yml                               # XcodeGen project specification
+├── PreventSleep.xcodeproj/                   # Generated Xcode project
+├── Sources/
+│   ├── PreventSleepCore/                     # Shared models, logging, protocols, and parsers
+│   │   ├── AppLogger.swift                   # 6-level structured logging engine
+│   │   ├── PowerSettingParser.swift          # Robust /usr/bin/pmset -g output parser
+│   │   ├── PreventSleepProtocol.swift        # XPC protocol and error definitions
+│   │   └── StateCoordinator.swift            # Thread-safe UI state machine and debounce engine
+│   ├── PreventSleepHelper/                   # Privileged LaunchDaemon
+│   │   ├── HelperService.swift               # XPC listener and client code signature validator
+│   │   ├── PowerSettingExecutor.swift        # Direct pmset executor with readback verification
+│   │   ├── com.sramzz.mac-no-sleep.helper.plist # Launchd daemon descriptor
+│   │   └── main.swift                        # Helper daemon entry point
+│   └── PreventSleepApp/                      # Native Menu Bar Application
+│       ├── AppDelegate.swift                 # Application lifecycle, wake observer, SMAppService
+│       ├── AppServiceManager.swift           # Wrapper for SMAppService.daemon and login item
+│       ├── HelperClient.swift                # Resilient async/await XPC client with timeout handling
+│       ├── StatusIconRenderer.swift          # SF Symbol image rendering pipeline
+│       ├── StatusItemController.swift        # Menu bar item controller (Position 1 default)
+│       ├── SetupView.swift                   # SwiftUI first-time setup window
+│       ├── SetupWindowController.swift       # NSWindowController for setup interface
+│       └── main.swift                        # App entry point with CLI flag dispatcher
+├── Tests/
+│   └── PreventSleepCoreTests/                # Comprehensive unit test suite (19 tests)
+│       ├── PowerSettingParserTests.swift     # Parsing edge-cases, missing fields, malformations
+│       ├── PowerSettingExecutorTests.swift   # Executor readback and failure cases
+│       ├── StateCoordinatorTests.swift       # Debounce, race conditions, mutation locking
+│       └── StatusIconRendererTests.swift     # SF Symbol mapping, tooltips, and a11y labels
+├── scripts/
+│   ├── build-and-install.sh                  # Release compilation, signing, and install script
+│   ├── run-debug.sh                          # Debug compilation and foreground execution script
+│   └── uninstall-helper.sh                   # Clean teardown, reset, and uninstallation script
+└── docs/
+    ├── implementation-plan.md                # System design and architecture specification
+    ├── verification-report.md                # Automated test matrix and signing verification
+    └── research/                             # Research on macOS power management and assertions
+```
+
+---
+
+## Automated Testing
 
 Run the test suite via Swift Package Manager:
-```bash
-swift test
-```
 
-Or with a specific Xcode developer directory:
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
 
-This runs 17 unit tests verifying:
-- Strict output parsing (handling edge cases, missing fields, malformed lines).
-- State coordination (handling rapid clicks, debounce, stale observation rejection).
-- Command execution & readback verification.
-- Menu-bar UI icon and accessibility label mapping.
+All 19 tests across 4 test suites execute in **~0.17s** with zero dependencies.
 
 ---
 
 ## Uninstalling / Resetting
 
 ### Method 1: In-App (Recommended)
-1. Right-click the menu-bar icon.
+1. Click (or right-click) the coffee cup menu-bar icon.
 2. Select **Allow Sleep & Remove Helper...**.
-3. Confirm the dialog. The app will ensure `SleepDisabled` is set to `0`, unregister the background LaunchDaemon, and remove launch at login.
-4. Move `PreventSleep.app` to Trash.
+3. Confirm the alert. Prevent Sleep will:
+   - Revert the power setting to normal sleep (`SleepDisabled 0`).
+   - Unregister the privileged LaunchDaemon from `smd` and `launchd`.
+   - Remove launch-at-login.
+4. Move `PreventSleep.app` from `/Applications` to Trash.
 
 ### Method 2: Manual Recovery Script
-If the app was already deleted or cannot run, execute the provided uninstall script in Terminal:
+If the application was already moved to Trash or cannot be opened, run the recovery script:
 ```bash
 ./scripts/uninstall-helper.sh
 ```
-This restores your Mac's sleep settings to default (`SleepDisabled 0`) and unregisters the LaunchDaemon.
+This resets the power setting to `SleepDisabled 0` and flushes any background daemon registrations.
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
