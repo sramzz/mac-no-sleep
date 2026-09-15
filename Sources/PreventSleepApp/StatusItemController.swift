@@ -18,7 +18,12 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
         self.coordinator = coordinator
         self.onOpenSetup = onOpenSetup
         self.onGuidedRemoval = onGuidedRemoval
+        UserDefaults.standard.register(defaults: [
+            "NSStatusItem Preferred Position PreventSleep": 1
+        ])
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        self.statusItem.autosaveName = "PreventSleep"
+        self.statusItem.behavior = [.removalAllowed]
         super.init()
 
         setupButton()
