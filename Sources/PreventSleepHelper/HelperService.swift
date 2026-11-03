@@ -4,8 +4,7 @@ import PreventSleepCore
 
 public final class HelperService: NSObject, PreventSleepXPCProtocol, NSXPCListenerDelegate {
     private let executor: PowerSettingExecutor
-    public static let machServiceName = "com.sramzz.mac-no-sleep.helper"
-    public static let expectedSigningIdentifier = "com.sramzz.mac-no-sleep"
+    public static let machServiceName = PreventSleepSecurity.helperIdentifier
 
     public init(executor: PowerSettingExecutor = PowerSettingExecutor()) {
         self.executor = executor
@@ -14,52 +13,17 @@ public final class HelperService: NSObject, PreventSleepXPCProtocol, NSXPCListen
 
     public func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
         AppLogger.shared.info("HelperService", "Incoming connection request from PID: \(connection.processIdentifier)")
-        guard validateClient(connection: connection) else {
-            AppLogger.shared.error("HelperService", "Rejecting connection from PID \(connection.processIdentifier): Code signature validation failed")
-            return false
-        }
 
-        AppLogger.shared.info("HelperService", "Accepted connection from client PID: \(connection.processIdentifier)")
+        // Enforce code signing requirement using macOS kernel audit-token verification
+        // Requires Apple cryptographic anchor, app bundle ID, and matching developer Team ID
+        connection.setCodeSigningRequirement(PreventSleepSecurity.clientRequirement)
+
         connection.exportedInterface = NSXPCInterface(with: PreventSleepXPCProtocol.self)
         connection.exportedObject = self
         connection.resume()
+
+        AppLogger.shared.info("HelperService", "Accepted connection from client PID: \(connection.processIdentifier)")
         return true
-    }
-
-    public func validateClient(connection: NSXPCConnection) -> Bool {
-        let pid = connection.processIdentifier
-        let attributes: [CFString: Any] = [
-            kSecGuestAttributePid: pid
-        ]
-
-        var secCode: SecCode?
-        let copyStatus = SecCodeCopyGuestWithAttributes(nil, attributes as CFDictionary, [], &secCode)
-        guard copyStatus == errSecSuccess, let code = secCode else {
-            AppLogger.shared.error("HelperService", "SecCodeCopyGuestWithAttributes failed for PID \(pid): \(copyStatus)")
-            return false
-        }
-
-        var staticCode: SecStaticCode?
-        guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess,
-              let validStaticCode = staticCode else {
-            AppLogger.shared.error("HelperService", "SecCodeCopyStaticCode failed for PID \(pid)")
-            return false
-        }
-
-        var requirement: SecRequirement?
-        let reqString = "identifier \"\(Self.expectedSigningIdentifier)\"" as CFString
-        guard SecRequirementCreateWithString(reqString, [], &requirement) == errSecSuccess,
-              let validReq = requirement else {
-            AppLogger.shared.error("HelperService", "SecRequirementCreateWithString failed for identifier '\(Self.expectedSigningIdentifier)'")
-            return false
-        }
-
-        let validity = SecStaticCodeCheckValidity(validStaticCode, SecCSFlags(rawValue: UInt32(kSecCSDoNotValidateResources)), validReq)
-        let isValid = validity == errSecSuccess
-        if !isValid {
-            AppLogger.shared.error("HelperService", "SecStaticCodeCheckValidity failed for PID \(pid): OSStatus \(validity)")
-        }
-        return isValid
     }
 
     public func getState(withReply reply: @escaping (NSNumber?, NSString?) -> Void) {
@@ -84,5 +48,10 @@ public final class HelperService: NSObject, PreventSleepXPCProtocol, NSXPCListen
             AppLogger.shared.error("HelperService", "❌ setPreventSleep(\(enabled)) failed: \(error.localizedDescription)")
             reply(nil, error.localizedDescription as NSString)
         }
+    }
+
+    public func getVersion(withReply reply: @escaping (NSString) -> Void) {
+        AppLogger.shared.debug("HelperService", "Handling getVersion XPC request -> \(PreventSleepBuildInfo.version)")
+        reply(PreventSleepBuildInfo.version as NSString)
     }
 }

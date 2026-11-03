@@ -1,4 +1,40 @@
 import AppKit
+import PreventSleepCore
+
+if CommandLine.arguments.contains("--version") || CommandLine.arguments.contains("-v") {
+    print("Prevent Sleep App: \(PreventSleepBuildInfo.displayVersion)")
+    let client = HelperClient()
+    Task {
+        do {
+            let helperVersion = try await client.getVersion(timeoutSeconds: 3.0)
+            print("Prevent Sleep Helper Daemon: \(helperVersion)")
+            exit(0)
+        } catch {
+            print("Prevent Sleep Helper Daemon: Not reachable (\(error.localizedDescription))")
+            exit(0)
+        }
+    }
+    RunLoop.main.run()
+}
+
+if CommandLine.arguments.contains("--help") || CommandLine.arguments.contains("-h") {
+    print("""
+    Prevent Sleep ☕️ \(PreventSleepBuildInfo.displayVersion)
+    Native macOS persistent sleep prevention utility.
+
+    Usage:
+      PreventSleep [options]
+
+    Options:
+      --toggle, -t         Toggle sleep prevention setting (ON <-> OFF)
+      --test-helper        Verify connectivity and authentication with helper daemon
+      --register           Register privileged LaunchDaemon with launchd
+      --unregister         Unregister LaunchDaemon from launchd
+      --version, -v        Display app and daemon version info
+      --help, -h           Show this help information
+    """)
+    exit(0)
+}
 
 if CommandLine.arguments.contains("--unregister") {
     do {
@@ -27,7 +63,7 @@ if CommandLine.arguments.contains("--test-helper") {
     RunLoop.main.run()
 }
 
-if CommandLine.arguments.contains("--toggle") {
+if CommandLine.arguments.contains("--toggle") || CommandLine.arguments.contains("-t") {
     let client = HelperClient()
     Task {
         do {
@@ -54,6 +90,14 @@ if CommandLine.arguments.contains("--register") {
         fputs("Failed to register daemon: \(error)\n", stderr)
         exit(1)
     }
+}
+
+// Single-instance enforcement for GUI launches
+let runningInstances = NSRunningApplication.runningApplications(withBundleIdentifier: PreventSleepSecurity.appIdentifier)
+let currentPID = ProcessInfo.processInfo.processIdentifier
+if let existing = runningInstances.first(where: { $0.processIdentifier != currentPID }) {
+    existing.activate(options: [.activateIgnoringOtherApps])
+    exit(0)
 }
 
 let app = NSApplication.shared

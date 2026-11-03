@@ -3,6 +3,7 @@ import Foundation
 @objc public protocol PreventSleepXPCProtocol {
     func getState(withReply reply: @escaping (NSNumber?, NSString?) -> Void)
     func setPreventSleep(_ enabled: Bool, withReply reply: @escaping (NSNumber?, NSString?) -> Void)
+    func getVersion(withReply reply: @escaping (NSString) -> Void)
 }
 
 public enum PreventSleepError: Error, LocalizedError, Equatable, Sendable {

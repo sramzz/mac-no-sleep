@@ -4,13 +4,14 @@ import PreventSleepCore
 public final class HelperClient: Sendable {
     private let machServiceName: String
 
-    public init(machServiceName: String = "com.sramzz.mac-no-sleep.helper") {
+    public init(machServiceName: String = PreventSleepSecurity.helperIdentifier) {
         self.machServiceName = machServiceName
     }
 
     private func createConnection() -> NSXPCConnection {
         let conn = NSXPCConnection(machServiceName: machServiceName, options: .privileged)
         conn.remoteObjectInterface = NSXPCInterface(with: PreventSleepXPCProtocol.self)
+        conn.setCodeSigningRequirement(PreventSleepSecurity.helperRequirement)
         return conn
     }
 
@@ -132,6 +133,59 @@ public final class HelperClient: Sendable {
                     AppLogger.shared.error("HelperClient", "❌ setPreventSleep(\(enabled)) returned neither value nor error")
                     resumeOnce(with: .failure(PreventSleepError.missingField))
                 }
+            }
+        }
+    }
+
+    public func getVersion(timeoutSeconds: Double = 5.0) async throws -> String {
+        AppLogger.shared.debug("HelperClient", "getVersion requested (timeout: \(timeoutSeconds)s)")
+        let conn = createConnection()
+        return try await withCheckedThrowingContinuation { continuation in
+            let lock = NSLock()
+            var hasResumed = false
+
+            let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.global())
+            timer.schedule(deadline: .now() + timeoutSeconds)
+
+            func resumeOnce(with result: Result<String, Error>) {
+                lock.lock()
+                defer { lock.unlock() }
+                if !hasResumed {
+                    hasResumed = true
+                    timer.cancel()
+                    conn.invalidate()
+                    continuation.resume(with: result)
+                }
+            }
+
+            timer.setEventHandler {
+                AppLogger.shared.error("HelperClient", "⏱️ getVersion timed out after \(timeoutSeconds)s")
+                resumeOnce(with: .failure(PreventSleepError.timedOut))
+            }
+            timer.resume()
+
+            conn.interruptionHandler = {
+                AppLogger.shared.warning("HelperClient", "⚠️ XPC connection interrupted in getVersion")
+                resumeOnce(with: .failure(PreventSleepError.helperUnreachable("XPC connection interrupted")))
+            }
+            conn.invalidationHandler = {
+                AppLogger.shared.warning("HelperClient", "⚠️ XPC connection invalidated in getVersion")
+                resumeOnce(with: .failure(PreventSleepError.helperUnreachable("XPC connection invalidated")))
+            }
+            conn.resume()
+
+            guard let proxy = conn.remoteObjectProxyWithErrorHandler({ error in
+                AppLogger.shared.error("HelperClient", "❌ XPC error in getVersion: \(error.localizedDescription)")
+                resumeOnce(with: .failure(PreventSleepError.helperUnreachable(error.localizedDescription)))
+            }) as? PreventSleepXPCProtocol else {
+                AppLogger.shared.error("HelperClient", "❌ Could not cast remote object proxy to PreventSleepXPCProtocol")
+                resumeOnce(with: .failure(PreventSleepError.helperUnreachable("Could not obtain remote proxy")))
+                return
+            }
+
+            proxy.getVersion { versionString in
+                AppLogger.shared.debug("HelperClient", "📥 getVersion returned: \(versionString)")
+                resumeOnce(with: .success(String(versionString)))
             }
         }
     }

@@ -8,8 +8,10 @@ public final class SetupWindowController: NSWindowController {
         let viewModel = SetupViewModel(coordinator: coordinator)
         let hostingController = NSHostingController(rootView: SetupView(viewModel: viewModel))
         let window = NSWindow(contentViewController: hostingController)
-        window.styleMask = [.titled, .closable]
+        window.styleMask = [.titled, .closable, .fullSizeContentView]
         window.title = "Prevent Sleep Setup"
+        window.titlebarAppearsTransparent = true
+        window.isReleasedWhenClosed = false
         window.center()
 
         self.init(window: window)

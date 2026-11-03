@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+DERIVED_DATA="$PROJECT_DIR/build/DerivedData"
+
 echo "=== Building Prevent Sleep for macOS Tahoe ==="
+cd "$PROJECT_DIR"
 xcodegen generate
 
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild \
   -project PreventSleep.xcodeproj \
   -scheme PreventSleep \
   -configuration Release \
+  -derivedDataPath "$DERIVED_DATA" \
   build
 
-BUILT_APP=$(find ~/Library/Developer/Xcode/DerivedData -name "PreventSleep.app" -path "*/Release/*" 2>/dev/null | head -n 1)
+BUILT_APP="$DERIVED_DATA/Build/Products/Release/PreventSleep.app"
 
-if [ -z "$BUILT_APP" ] || [ ! -d "$BUILT_APP" ]; then
-    echo "Error: Could not find built PreventSleep.app in DerivedData"
+if [ ! -d "$BUILT_APP" ]; then
+    echo "Error: Could not find built PreventSleep.app at $BUILT_APP"
     exit 1
 fi
 

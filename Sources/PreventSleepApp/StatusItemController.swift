@@ -46,6 +46,13 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
     }
 
+    public func menuWillOpen(_ menu: NSMenu) {
+        // Event-driven refresh whenever the user clicks to view the menu
+        Task {
+            await coordinator.refresh()
+        }
+    }
+
     @objc private func handleStatusItemClick(_ sender: NSStatusBarButton) {
         let event = NSApp.currentEvent
         let isRightClick = event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true
@@ -119,11 +126,25 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        let aboutItem = NSMenuItem(title: "About Prevent Sleep", action: #selector(menuAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
+        let feedbackItem = NSMenuItem(title: "Send Feedback...", action: #selector(menuFeedback), keyEquivalent: "")
+        feedbackItem.target = self
+        menu.addItem(feedbackItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         let removeItem = NSMenuItem(title: "Allow Sleep & Remove Helper...", action: #selector(menuRemove), keyEquivalent: "")
         removeItem.target = self
         menu.addItem(removeItem)
 
         menu.addItem(NSMenuItem.separator())
+
+        let versionItem = NSMenuItem(title: "Version \(PreventSleepBuildInfo.displayVersion)", action: nil, keyEquivalent: "")
+        versionItem.isEnabled = false
+        menu.addItem(versionItem)
 
         let quitItem = NSMenuItem(title: "Quit Prevent Sleep", action: #selector(menuQuit), keyEquivalent: "q")
         quitItem.target = self
@@ -146,11 +167,57 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
         buildMenu()
     }
 
+    @objc private func menuAbout() {
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.orderFrontStandardAboutPanel(
+            options: [
+                NSApplication.AboutPanelOptionKey.applicationVersion: PreventSleepBuildInfo.version,
+                NSApplication.AboutPanelOptionKey.version: PreventSleepBuildInfo.buildNumber
+            ]
+        )
+    }
+
+    @objc private func menuFeedback() {
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        let appVersion = PreventSleepBuildInfo.displayVersion
+        let body = "\n\n---\nApp Version: \(appVersion)\nmacOS: \(osVersion)"
+        let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let subject = "Prevent Sleep Feedback".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        if let url = URL(string: "mailto:support@sramzz.com?subject=\(subject)&body=\(encodedBody)") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     @objc private func menuRemove() {
         onGuidedRemoval()
     }
 
     @objc private func menuQuit() {
-        NSApp.terminate(nil)
+        if case .ready(let isOn) = currentOperationalState, isOn {
+            let alert = NSAlert()
+            alert.messageText = "Sleep is still disabled"
+            alert.informativeText = "Prevent Sleep is currently active. Your Mac will not sleep automatically (even with the lid closed).\n\nWould you like to restore normal sleep before quitting?"
+            alert.addButton(withTitle: "Allow Sleep & Quit")
+            alert.addButton(withTitle: "Keep Disabled & Quit")
+            alert.addButton(withTitle: "Cancel")
+            alert.alertStyle = .warning
+
+            NSApp.activate(ignoringOtherApps: true)
+            let response = alert.runModal()
+            switch response {
+            case .alertFirstButtonReturn:
+                Task {
+                    _ = try? await self.coordinator.forceSet(false)
+                    NSApp.terminate(nil)
+                }
+            case .alertSecondButtonReturn:
+                NSApp.terminate(nil)
+            default:
+                // Cancel quit
+                break
+            }
+        } else {
+            NSApp.terminate(nil)
+        }
     }
 }

@@ -1,6 +1,9 @@
 .build/
 .cache/
 DerivedData/
+build/
+.swiftpm/
 *.xcuserstate
 main
 .DS_Store
+*.dmg
