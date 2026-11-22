@@ -34,7 +34,15 @@ fi
 echo "Using code signing identity: $SIGNING_IDENTITY"
 find "$BUILT_APP/Contents/MacOS" -name "*.dylib" -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
 if [ -d "$BUILT_APP/Contents/Frameworks" ]; then
-    find "$BUILT_APP/Contents/Frameworks" -type f \( -name "*.dylib" -o -perm +111 \) -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
+    find "$BUILT_APP/Contents/Frameworks" -maxdepth 1 -name "*.dylib" -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
+fi
+SPARKLE_FW="$BUILT_APP/Contents/Frameworks/Sparkle.framework"
+if [ -d "$SPARKLE_FW" ]; then
+    codesign -s "$SIGNING_IDENTITY" -o runtime --force "$SPARKLE_FW/Versions/B/XPCServices/Installer.xpc"
+    codesign -s "$SIGNING_IDENTITY" -o runtime --force --preserve-metadata=entitlements "$SPARKLE_FW/Versions/B/XPCServices/Downloader.xpc"
+    codesign -s "$SIGNING_IDENTITY" -o runtime --force "$SPARKLE_FW/Versions/B/Autoupdate"
+    codesign -s "$SIGNING_IDENTITY" -o runtime --force "$SPARKLE_FW/Versions/B/Updater.app"
+    codesign -s "$SIGNING_IDENTITY" -o runtime --force "$SPARKLE_FW"
 fi
 if [ -f "$BUILT_APP/Contents/MacOS/com.preventsleep.helper" ]; then
     codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.preventsleep.helper" "$BUILT_APP/Contents/MacOS/com.preventsleep.helper"
@@ -52,10 +60,7 @@ echo "=== Build and Verification Complete ==="
 if [[ "${1:-}" == "--install" || "${1:-}" == "-i" ]]; then
     echo "Installing to /Applications..."
     killall PreventSleep 2>/dev/null || true
-    if [ -x "/Applications/PreventSleep.app/Contents/MacOS/PreventSleep" ]; then
-        /Applications/PreventSleep.app/Contents/MacOS/PreventSleep --unregister 2>/dev/null || true
-        sleep 1
-    fi
+    sleep 1
     rm -rf /Applications/PreventSleep.app
     cp -R "$BUILT_APP" /Applications/
     "$LSREGISTER" -f -R -trusted /Applications/PreventSleep.app

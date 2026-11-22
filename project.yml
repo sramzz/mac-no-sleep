@@ -4,6 +4,11 @@ options:
   deploymentTarget:
     macOS: "26.0"
 
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
+
 settings:
   MACOSX_DEPLOYMENT_TARGET: "26.0"
   SWIFT_VERSION: "6.0"
@@ -50,6 +55,7 @@ targets:
       - target: PreventSleepCore
       - target: PreventSleepHelper
         embed: false
+      - package: Sparkle
     info:
       path: Sources/PreventSleepApp/Resources/Info.plist
       properties:
@@ -61,6 +67,9 @@ targets:
         LSUIElement: true
         CFBundleIconFile: "AppIcon"
         CFBundleIconName: "AppIcon"
+        SUFeedURL: "https://github.com/sramzz/mac-no-sleep/releases/latest/download/appcast.xml"
+        SUEnableAutomaticChecks: true
+        SUPublicEDKey: "I3fT2+tkajGqOC/t2qGfg/Tn/dZIFjTJ7nlOeEmlPIA="
     settings:
       PRODUCT_NAME: PreventSleep
       PRODUCT_BUNDLE_IDENTIFIER: com.preventsleep.app

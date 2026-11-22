@@ -92,10 +92,11 @@ if CommandLine.arguments.contains("--register") {
     }
 }
 
-// Single-instance enforcement for GUI launches
+// Single-instance enforcement for GUI launches (allow DMG / Downloads copies to reach AppRelocator upgrade flow)
 let runningInstances = NSRunningApplication.runningApplications(withBundleIdentifier: PreventSleepSecurity.appIdentifier)
 let currentPID = ProcessInfo.processInfo.processIdentifier
-if let existing = runningInstances.first(where: { $0.processIdentifier != currentPID }) {
+if !AppRelocator.isRunningOutsideApplicationsFolder(),
+   let existing = runningInstances.first(where: { $0.processIdentifier != currentPID }) {
     existing.activate(options: [.activateIgnoringOtherApps])
     exit(0)
 }

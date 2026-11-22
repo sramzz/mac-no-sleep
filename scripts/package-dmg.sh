@@ -87,7 +87,7 @@ fi
 echo ""
 echo "📦 Step 1: Generating project & compiling clean Release build..."
 cd "$PROJECT_DIR"
-rm -rf "$DERIVED_DATA"
+rm -rf "$DERIVED_DATA/Build"
 xcodegen generate
 
 DEVELOPER_DIR="$DEVELOPER_DIR" xcodebuild \
@@ -131,7 +131,17 @@ fi
 # Sign embedded dylibs / frameworks
 find "$APP_PATH/Contents/MacOS" -name "*.dylib" -exec codesign -s "$SIGNING_IDENTITY" "${SIGN_OPTS[@]}" {} + 2>/dev/null || true
 if [ -d "$APP_PATH/Contents/Frameworks" ]; then
-    find "$APP_PATH/Contents/Frameworks" -type f \( -name "*.dylib" -o -perm +111 \) -exec codesign -s "$SIGNING_IDENTITY" "${SIGN_OPTS[@]}" {} + 2>/dev/null || true
+    find "$APP_PATH/Contents/Frameworks" -maxdepth 1 -name "*.dylib" -exec codesign -s "$SIGNING_IDENTITY" "${SIGN_OPTS[@]}" {} + 2>/dev/null || true
+fi
+
+# Sign Sparkle.framework inside-out if embedded
+SPARKLE_FW="$APP_PATH/Contents/Frameworks/Sparkle.framework"
+if [ -d "$SPARKLE_FW" ]; then
+    codesign -s "$SIGNING_IDENTITY" "${SIGN_OPTS[@]}" "$SPARKLE_FW/Versions/B/XPCServices/Installer.xpc"
+    codesign -s "$SIGNING_IDENTITY" "${SIGN_OPTS[@]}" --preserve-metadata=entitlements "$SPARKLE_FW/Versions/B/XPCServices/Downloader.xpc"
+    codesign -s "$SIGNING_IDENTITY" "${SIGN_OPTS[@]}" "$SPARKLE_FW/Versions/B/Autoupdate"
+    codesign -s "$SIGNING_IDENTITY" "${SIGN_OPTS[@]}" "$SPARKLE_FW/Versions/B/Updater.app"
+    codesign -s "$SIGNING_IDENTITY" "${SIGN_OPTS[@]}" "$SPARKLE_FW"
 fi
 
 # Sign main app bundle

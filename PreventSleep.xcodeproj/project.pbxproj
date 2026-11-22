@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0427125C707A01AF98B776DD /* UpdaterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B634B0FF3C65E7ADC6E54949 /* UpdaterManager.swift */; };
 		10EF9B2EF45A9570DC6E79B8 /* StateCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B04279E795F062D9CF16657 /* StateCoordinator.swift */; };
 		35C6DA08A66387CB638D10C3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFD98E028B1AC89A31F6EC4C /* main.swift */; };
 		4A163F27A906A67AC6D1A2FA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE82676E3366922EA437E216 /* AppDelegate.swift */; };
@@ -34,6 +35,7 @@
 		D8378AC9516D960575DBD860 /* PowerSettingParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77122CD6B250191ECDC5DAE2 /* PowerSettingParser.swift */; };
 		DC4738BE8CB272C11FF0AB9C /* AppServiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFDEAD72337C7D4314762496 /* AppServiceManager.swift */; };
 		E7235E844F8C0E8FF3BAC84F /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 319F96AA133B8E0C80F7BE88 /* SetupView.swift */; };
+		F86A474AAB53ADE1EC7F5544 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = F3B3F5550F80CD6D1B9AA23A /* Sparkle */; };
 		F92B104CBF3CAF4998DF5CC4 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B0DB93264DDC3B85CBBC00A /* StatusItemController.swift */; };
 /* End PBXBuildFile section */
 
@@ -98,6 +100,7 @@
 		92B83DE24C100B1981C605D4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		96C5F08B630C6600EF720AB9 /* PreventSleep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PreventSleep.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B285B8CAEDBC27ADA04A7B20 /* libPreventSleepCore.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPreventSleepCore.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		B634B0FF3C65E7ADC6E54949 /* UpdaterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterManager.swift; sourceTree = "<group>"; };
 		BE6BC3FFD6C163713C035B1A /* SetupWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupWindowController.swift; sourceTree = "<group>"; };
 		C518573089961EE14D7CA83B /* PreventSleepProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreventSleepProtocol.swift; sourceTree = "<group>"; };
 		C5D174FF7E1628153AEC063E /* PreventSleepHelper */ = {isa = PBXFileReference; includeInIndex = 0; path = PreventSleepHelper; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -129,6 +132,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4CF0FC4F606B221AD4D02824 /* libPreventSleepCore.a in Frameworks */,
+				F86A474AAB53ADE1EC7F5544 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -156,6 +160,7 @@
 				BE6BC3FFD6C163713C035B1A /* SetupWindowController.swift */,
 				0653BB1A8323F9EF91950FE6 /* StatusIconRenderer.swift */,
 				3B0DB93264DDC3B85CBBC00A /* StatusItemController.swift */,
+				B634B0FF3C65E7ADC6E54949 /* UpdaterManager.swift */,
 				01B5A7744B509D5A3616A6D8 /* Resources */,
 			);
 			name = PreventSleepApp;
@@ -281,6 +286,7 @@
 			);
 			name = PreventSleep;
 			packageProductDependencies = (
+				F3B3F5550F80CD6D1B9AA23A /* Sparkle */,
 			);
 			productName = PreventSleep;
 			productReference = 96C5F08B630C6600EF720AB9 /* PreventSleep.app */;
@@ -336,6 +342,9 @@
 			);
 			mainGroup = F4F5CE02672508E57BA323C1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				07D34A337B5691D11F340AE1 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 53D60DB32955CE39CF20A0EE /* Products */;
 			projectDirPath = "";
@@ -421,6 +430,7 @@
 				D41E105145EFCF87DE9F8918 /* SetupWindowController.swift in Sources */,
 				AB6C9632B3AFAC5E0F818661 /* StatusIconRenderer.swift in Sources */,
 				F92B104CBF3CAF4998DF5CC4 /* StatusItemController.swift in Sources */,
+				0427125C707A01AF98B776DD /* UpdaterManager.swift in Sources */,
 				35C6DA08A66387CB638D10C3 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -816,6 +826,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		07D34A337B5691D11F340AE1 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F3B3F5550F80CD6D1B9AA23A /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 07D34A337B5691D11F340AE1 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EFB7A359C0B334BD2D9CACAC /* Project object */;
 }

@@ -85,8 +85,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
                     let helperVersion = try await client.getVersion(timeoutSeconds: 3.0)
                     AppLogger.shared.info("AppDelegate", "Helper daemon version confirmed: \(helperVersion) (App: \(PreventSleepBuildInfo.version))")
                     if helperVersion != PreventSleepBuildInfo.version {
-                        AppLogger.shared.warning("AppDelegate", "Daemon version mismatch (\(helperVersion) != \(PreventSleepBuildInfo.version)). Upgrading registration...")
-                        await self.repairDaemonRegistration()
+                        AppLogger.shared.info("AppDelegate", "Helper daemon running version \(helperVersion) (App: \(PreventSleepBuildInfo.version)); will roll over to new binary on next on-demand launchd spawn.")
+                        try? AppServiceManager.shared.registerDaemon()
                     }
                 } catch {
                     AppLogger.shared.warning("AppDelegate", "Helper unreachable despite enabled status (\(error.localizedDescription)). Re-registering daemon...")

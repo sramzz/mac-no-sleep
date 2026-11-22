@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.1] - 2026-11-22
 
+### Added
+- **Sparkle 2 Auto-Updates**: Integrated Sparkle 2 (`SPUStandardUpdaterController`) with Ed25519 signature verification (`SUPublicEDKey`) and `"Check for Updates..."` (`⌘U`) in the menu bar.
+
 ### Changed
 - **Custom Menu Bar Status Icons**: Replaced the coffee cup SF Symbols with custom template assets (`StatusIconActive` and `StatusIconInactive`) adapting automatically to Light and Dark Mode — a solidly filled syringe with negative-space graduation notches and enlarged eye when active (ON), and an outlined syringe without needle plus enlarged `z Z` when inactive (OFF).
 - **Vector-Rendered App Icon**: Replaced the legacy coffee mug `AppIcon` with a sharp CoreGraphics vector rendering of the active syringe + eye emblem inside the macOS dark graphite squircle across all 10 macOS icon resolutions (`scripts/generate-icon.swift`).
 - **Setup View Alignment**: Updated the setup header icon and guidance copy in `SetupView` to use the new active status icon.
+- **Zero-Unregister Daemon Roll-Over**: Configured `com.preventsleep.helper` to exit cleanly after 15s of inactivity so `launchd` spawns updated helper binaries on demand without calling `SMAppService.unregister()`.
+- **Smart In-Place DMG Upgrade**: Updated `AppRelocator` and `main.swift` to offer a 1-click `"Update & Relaunch"` replacement when opened from a DMG or `~/Downloads` while an older version is running.
 
 ---
 

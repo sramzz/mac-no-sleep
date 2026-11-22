@@ -4,13 +4,9 @@ import PreventSleepCore
 
 @MainActor
 public enum AppRelocator {
-    /// Checks the current application location and prompts the user to move/copy to /Applications if needed.
-    /// Returns `true` if relocation was performed (and the app is terminating), or `false` to continue normal startup.
-    @discardableResult
-    public static func checkLocationAndPrompt() -> Bool {
+    /// Returns `true` when running interactively outside `/Applications` (e.g., from a mounted DMG or `~/Downloads`).
+    public static func isRunningOutsideApplicationsFolder() -> Bool {
         let bundleURL = Bundle.main.bundleURL
-
-        // Skip if running from Xcode DerivedData, build directories, or command-line flags
         let bundlePath = bundleURL.path
         if bundlePath.contains("/DerivedData/") ||
            bundlePath.contains("/.build/") ||
@@ -26,25 +22,41 @@ public enum AppRelocator {
             return false
         }
 
-        // Check if already in /Applications, /Applications/Utilities, or ~/Applications
-        if isInsideApplicationsFolder(bundleURL: bundleURL) {
+        return !isInsideApplicationsFolder(bundleURL: bundleURL)
+    }
+
+    /// Checks the current application location and prompts the user to move/copy to /Applications if needed.
+    /// Returns `true` if relocation was performed (and the app is terminating), or `false` to continue normal startup.
+    @discardableResult
+    public static func checkLocationAndPrompt() -> Bool {
+        guard isRunningOutsideApplicationsFolder() else {
             return false
         }
 
+        let bundleURL = Bundle.main.bundleURL
+        let bundlePath = bundleURL.path
+
         // Running outside Applications (e.g. ~/Downloads or mounted DMG)
         let isDiskImage = bundlePath.hasPrefix("/Volumes/")
-        AppLogger.shared.info("AppRelocator", "Application running outside Applications folder (\(bundlePath)). Prompting user for relocation.")
+        let existingInstallExists = FileManager.default.fileExists(atPath: "/Applications/PreventSleep.app")
+        AppLogger.shared.info("AppRelocator", "Application running outside Applications folder (\(bundlePath)). Existing install: \(existingInstallExists). Prompting user.")
 
         let alert = NSAlert()
-        alert.messageText = isDiskImage ? "Copy to Applications Folder?" : "Move to Applications Folder?"
-        if isDiskImage {
-            alert.informativeText = "Prevent Sleep needs to run from your Applications folder so that its background service can manage system settings reliably.\n\nWould you like to copy Prevent Sleep to Applications and open it from there?"
+        if existingInstallExists {
+            alert.messageText = "Update Prevent Sleep in Applications?"
+            alert.informativeText = "An existing copy of Prevent Sleep is installed in your Applications folder.\n\nWould you like to replace it with this version (\(PreventSleepBuildInfo.displayVersion)) and relaunch?"
+            alert.addButton(withTitle: "Update & Relaunch")
+            alert.addButton(withTitle: "Cancel")
         } else {
-            alert.informativeText = "Prevent Sleep needs to run from your Applications folder so that its background service can manage system settings reliably.\n\nWould you like to move Prevent Sleep to Applications now?"
+            alert.messageText = isDiskImage ? "Copy to Applications Folder?" : "Move to Applications Folder?"
+            if isDiskImage {
+                alert.informativeText = "Prevent Sleep needs to run from your Applications folder so that its background service can manage system settings reliably.\n\nWould you like to copy Prevent Sleep to Applications and open it from there?"
+            } else {
+                alert.informativeText = "Prevent Sleep needs to run from your Applications folder so that its background service can manage system settings reliably.\n\nWould you like to move Prevent Sleep to Applications now?"
+            }
+            alert.addButton(withTitle: isDiskImage ? "Copy to Applications Folder" : "Move to Applications Folder")
+            alert.addButton(withTitle: "Do Not Move")
         }
-
-        alert.addButton(withTitle: isDiskImage ? "Copy to Applications Folder" : "Move to Applications Folder")
-        alert.addButton(withTitle: "Do Not Move")
         alert.alertStyle = .informational
 
         // Ensure alert displays prominently
@@ -88,16 +100,28 @@ public enum AppRelocator {
         AppLogger.shared.info("AppRelocator", "Relocating from \(sourceURL.path) to \(destinationURL.path)")
 
         do {
-            // If target already exists in /Applications, unregister daemon and remove old bundle
-            if fileManager.fileExists(atPath: destinationURL.path) {
-                AppLogger.shared.info("AppRelocator", "Existing app found at \(destinationURL.path). Unregistering and replacing...")
-                try? AppServiceManager.shared.unregisterDaemon()
-                try fileManager.removeItem(at: destinationURL)
-            }
+            // Gracefully terminate any other running instance before replacing /Applications/PreventSleep.app.
+            // Intentionally preserve SMAppService daemon registration so the user does not lose Background approval.
+            terminateOtherRunningInstances()
 
-            // Copy to /Applications
-            try fileManager.copyItem(at: sourceURL, to: destinationURL)
-            AppLogger.shared.info("AppRelocator", "Successfully copied bundle to \(destinationURL.path)")
+            if fileManager.fileExists(atPath: destinationURL.path) {
+                AppLogger.shared.info("AppRelocator", "Existing app found at \(destinationURL.path). Performing atomic replacement...")
+                let replacementDir = try fileManager.url(
+                    for: .itemReplacementDirectory,
+                    in: .userDomainMask,
+                    appropriateFor: targetDirectory,
+                    create: true
+                )
+                defer { try? fileManager.removeItem(at: replacementDir) }
+
+                let stagedURL = replacementDir.appendingPathComponent(appName)
+                try fileManager.copyItem(at: sourceURL, to: stagedURL)
+                _ = try fileManager.replaceItemAt(destinationURL, withItemAt: stagedURL)
+                AppLogger.shared.info("AppRelocator", "Successfully replaced bundle at \(destinationURL.path)")
+            } else {
+                try fileManager.copyItem(at: sourceURL, to: destinationURL)
+                AppLogger.shared.info("AppRelocator", "Successfully copied bundle to \(destinationURL.path)")
+            }
 
             // If not a disk image, clean up the original file from Downloads/Desktop
             if !isDiskImage {
@@ -130,6 +154,29 @@ public enum AppRelocator {
             errorAlert.alertStyle = .critical
             errorAlert.runModal()
             return false
+        }
+    }
+
+    private static func terminateOtherRunningInstances() {
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: PreventSleepSecurity.appIdentifier)
+            .filter { $0.processIdentifier != currentPID }
+
+        guard !running.isEmpty else { return }
+
+        AppLogger.shared.info("AppRelocator", "Terminating \(running.count) running instance(s) before replacing bundle...")
+        for app in running {
+            app.terminate()
+        }
+
+        let deadline = Date().addingTimeInterval(2.0)
+        while Date() < deadline && running.contains(where: { !$0.isTerminated }) {
+            Thread.sleep(forTimeInterval: 0.1)
+        }
+
+        for app in running where !app.isTerminated {
+            AppLogger.shared.warning("AppRelocator", "Force terminating PID \(app.processIdentifier) after timeout.")
+            app.forceTerminate()
         }
     }
 

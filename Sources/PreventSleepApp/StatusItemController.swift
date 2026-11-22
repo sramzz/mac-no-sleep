@@ -29,6 +29,7 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
         setupButton()
         update(state: currentOperationalState)
         buildMenu()
+        _ = UpdaterManager.shared
 
         Task {
             await coordinator.addListener { [weak self] state in
@@ -130,6 +131,10 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
         aboutItem.target = self
         menu.addItem(aboutItem)
 
+        let updateItem = NSMenuItem(title: "Check for Updates...", action: #selector(menuCheckForUpdates), keyEquivalent: "u")
+        updateItem.target = self
+        menu.addItem(updateItem)
+
         let feedbackItem = NSMenuItem(title: "Send Feedback...", action: #selector(menuFeedback), keyEquivalent: "")
         feedbackItem.target = self
         menu.addItem(feedbackItem)
@@ -175,6 +180,10 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
                 NSApplication.AboutPanelOptionKey.version: PreventSleepBuildInfo.buildNumber
             ]
         )
+    }
+
+    @objc private func menuCheckForUpdates() {
+        UpdaterManager.shared.checkForUpdates()
     }
 
     @objc private func menuFeedback() {
