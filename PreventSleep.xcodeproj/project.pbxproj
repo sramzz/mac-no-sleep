@@ -393,7 +393,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "DEST_DAEMONS=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchDaemons\"\nDEST_MACOS=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/MacOS\"\nSIGNING_IDENTITY=\"${CODE_SIGN_IDENTITY_OVERRIDE:-}\"\nif [ -z \"$SIGNING_IDENTITY\" ]; then\n    SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep \"Apple Development\" | head -n 1 | awk -F'\"' '{print $2}' || true)\nfi\nif [ -z \"$SIGNING_IDENTITY\" ]; then\n    SIGNING_IDENTITY=\"-\"\nfi\nmkdir -p \"$DEST_DAEMONS\"\nmkdir -p \"$DEST_MACOS\"\nrm -f \"$DEST_DAEMONS/com.sramzz.mac-no-sleep.helper\"\ncp \"$BUILT_PRODUCTS_DIR/com.sramzz.mac-no-sleep.helper\" \"$DEST_MACOS/\"\ncp \"$SRCROOT/Sources/PreventSleepHelper/com.sramzz.mac-no-sleep.helper.plist\" \"$DEST_DAEMONS/\"\ncodesign -s \"$SIGNING_IDENTITY\" -o runtime --force -i \"com.sramzz.mac-no-sleep.helper\" \"$DEST_MACOS/com.sramzz.mac-no-sleep.helper\"\nfind \"$DEST_MACOS\" -name \"*.dylib\" -exec codesign -s \"$SIGNING_IDENTITY\" -o runtime --force {} + 2>/dev/null || true\n";
+			shellScript = "DEST_DAEMONS=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchDaemons\"\nDEST_MACOS=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/MacOS\"\nSIGNING_IDENTITY=\"${CODE_SIGN_IDENTITY_OVERRIDE:-}\"\nif [ -z \"$SIGNING_IDENTITY\" ]; then\n    SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep \"Apple Development\" | head -n 1 | awk -F'\"' '{print $2}' || true)\nfi\nif [ -z \"$SIGNING_IDENTITY\" ]; then\n    SIGNING_IDENTITY=\"-\"\nfi\nmkdir -p \"$DEST_DAEMONS\"\nmkdir -p \"$DEST_MACOS\"\nrm -f \"$DEST_DAEMONS/com.preventsleep.helper\"\ncp \"$BUILT_PRODUCTS_DIR/com.preventsleep.helper\" \"$DEST_MACOS/\"\ncp \"$SRCROOT/Sources/PreventSleepHelper/com.preventsleep.helper.plist\" \"$DEST_DAEMONS/\"\ncodesign -s \"$SIGNING_IDENTITY\" -o runtime --force -i \"com.preventsleep.helper\" \"$DEST_MACOS/com.preventsleep.helper\"\nfind \"$DEST_MACOS\" -name \"*.dylib\" -exec codesign -s \"$SIGNING_IDENTITY\" -o runtime --force {} + 2>/dev/null || true\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -567,7 +567,7 @@
 					"$(inherited)",
 					"-ObjC",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.sramzz.mac-no-sleep";
+				PRODUCT_BUNDLE_IDENTIFIER = com.preventsleep.app;
 				PRODUCT_NAME = PreventSleep;
 				SDKROOT = macosx;
 			};
@@ -587,7 +587,7 @@
 					"$(inherited)",
 					"-ObjC",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sramzz.PreventSleepTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.preventsleep.PreventSleepTests;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -610,7 +610,7 @@
 					"$(inherited)",
 					"-ObjC",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.sramzz.mac-no-sleep";
+				PRODUCT_BUNDLE_IDENTIFIER = com.preventsleep.app;
 				PRODUCT_NAME = PreventSleep;
 				SDKROOT = macosx;
 			};
@@ -630,7 +630,7 @@
 					"$(inherited)",
 					"-ObjC",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sramzz.PreventSleepTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.preventsleep.PreventSleepTests;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -650,8 +650,8 @@
 					"$(inherited)",
 					"-ObjC",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.sramzz.mac-no-sleep.helper";
-				PRODUCT_NAME = "com.sramzz.mac-no-sleep.helper";
+				PRODUCT_BUNDLE_IDENTIFIER = com.preventsleep.helper;
+				PRODUCT_NAME = com.preventsleep.helper;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -664,7 +664,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sramzz.PreventSleepCore;
+				PRODUCT_BUNDLE_IDENTIFIER = com.preventsleep.PreventSleepCore;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -747,8 +747,8 @@
 					"$(inherited)",
 					"-ObjC",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.sramzz.mac-no-sleep.helper";
-				PRODUCT_NAME = "com.sramzz.mac-no-sleep.helper";
+				PRODUCT_BUNDLE_IDENTIFIER = com.preventsleep.helper;
+				PRODUCT_NAME = com.preventsleep.helper;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -761,7 +761,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sramzz.PreventSleepCore;
+				PRODUCT_BUNDLE_IDENTIFIER = com.preventsleep.PreventSleepCore;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};

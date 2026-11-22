@@ -2,8 +2,8 @@ import Foundation
 
 public enum PreventSleepSecurity: Sendable {
     public static let teamID = "N4BDK3Z362"
-    public static let appIdentifier = "com.sramzz.mac-no-sleep"
-    public static let helperIdentifier = "com.sramzz.mac-no-sleep.helper"
+    public static let appIdentifier = "com.preventsleep.app"
+    public static let helperIdentifier = "com.preventsleep.helper"
 
     /// Requirement enforced by the helper daemon on all incoming client connections.
     /// Requires Apple cryptographic anchor, app bundle ID, and matching developer Team ID.

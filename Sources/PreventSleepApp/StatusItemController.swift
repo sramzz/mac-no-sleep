@@ -183,7 +183,7 @@ public final class StatusItemController: NSObject, NSMenuDelegate {
         let body = "\n\n---\nApp Version: \(appVersion)\nmacOS: \(osVersion)"
         let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let subject = "Prevent Sleep Feedback".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        if let url = URL(string: "mailto:support@sramzz.com?subject=\(subject)&body=\(encodedBody)") {
+        if let url = URL(string: "mailto:support@preventsleep.app?subject=\(subject)&body=\(encodedBody)") {
             NSWorkspace.shared.open(url)
         }
     }

@@ -33,8 +33,8 @@ find "$BUILT_APP/Contents/MacOS" -name "*.dylib" -exec codesign -s "$SIGNING_IDE
 if [ -d "$BUILT_APP/Contents/Frameworks" ]; then
     find "$BUILT_APP/Contents/Frameworks" -type f \( -name "*.dylib" -o -perm +111 \) -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
 fi
-if [ -f "$BUILT_APP/Contents/MacOS/com.sramzz.mac-no-sleep.helper" ]; then
-    codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.sramzz.mac-no-sleep.helper" "$BUILT_APP/Contents/MacOS/com.sramzz.mac-no-sleep.helper"
+if [ -f "$BUILT_APP/Contents/MacOS/com.preventsleep.helper" ]; then
+    codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.preventsleep.helper" "$BUILT_APP/Contents/MacOS/com.preventsleep.helper"
 fi
 codesign -s "$SIGNING_IDENTITY" -o runtime --force "$BUILT_APP"
 

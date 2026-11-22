@@ -70,7 +70,7 @@ public final class AppLogger: @unchecked Sendable {
     private let osLogger: os.Logger
     private let dateFormatter: DateFormatter
 
-    public init(subsystem: String = "com.sramzz.mac-no-sleep", category: String = "App") {
+    public init(subsystem: String = "com.preventsleep.app", category: String = "App") {
         if let env = ProcessInfo.processInfo.environment["PREVENT_SLEEP_LOG_LEVEL"],
            let parsed = LogLevel.from(string: env) {
             self._level = parsed

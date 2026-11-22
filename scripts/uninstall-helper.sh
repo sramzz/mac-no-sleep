@@ -12,6 +12,7 @@ if [ -f "/Applications/PreventSleep.app/Contents/MacOS/PreventSleep" ]; then
 fi
 
 echo "Ensuring system service is booted out..."
+sudo launchctl bootout system/com.preventsleep.helper 2>/dev/null || true
 sudo launchctl bootout system/com.sramzz.mac-no-sleep.helper 2>/dev/null || true
 
 echo "Restoring system SleepDisabled setting to 0 (Allow Sleep)..."

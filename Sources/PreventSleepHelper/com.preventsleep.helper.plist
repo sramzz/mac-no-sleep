@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.sramzz.mac-no-sleep.helper</string>
+    <string>com.preventsleep.helper</string>
     <key>MachServices</key>
     <dict>
-        <key>com.sramzz.mac-no-sleep.helper</key>
+        <key>com.preventsleep.helper</key>
         <true/>
     </dict>
     <key>AssociatedBundleIdentifiers</key>
     <array>
-        <string>com.sramzz.mac-no-sleep</string>
+        <string>com.preventsleep.app</string>
     </array>
     <key>BundleProgram</key>
-    <string>Contents/MacOS/com.sramzz.mac-no-sleep.helper</string>
+    <string>Contents/MacOS/com.preventsleep.helper</string>
 </dict>
 </plist>

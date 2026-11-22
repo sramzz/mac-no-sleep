@@ -14,6 +14,7 @@ echo "2️⃣  Unregistering privileged LaunchDaemon..."
 if [ -f "/Applications/PreventSleep.app/Contents/MacOS/PreventSleep" ]; then
     /Applications/PreventSleep.app/Contents/MacOS/PreventSleep --unregister 2>/dev/null || true
 fi
+sudo launchctl bootout system/com.preventsleep.helper 2>/dev/null || true
 sudo launchctl bootout system/com.sramzz.mac-no-sleep.helper 2>/dev/null || true
 
 # 3. Restore system power setting to normal sleep
@@ -26,8 +27,9 @@ rm -rf /Applications/PreventSleep.app
 
 # 5. Clear preferences & temporary state
 echo "5️⃣  Clearing user preferences..."
+defaults delete com.preventsleep.app 2>/dev/null || true
 defaults delete com.sramzz.mac-no-sleep 2>/dev/null || true
-rm -f /tmp/com.sramzz.mac-no-sleep.helper.*
+rm -f /tmp/com.preventsleep.helper.* /tmp/com.sramzz.mac-no-sleep.helper.*
 
 # 6. Unmount any mounted Prevent Sleep disk images
 echo "6️⃣  Unmounting any mounted test disk images..."

@@ -1,6 +1,6 @@
 name: PreventSleep
 options:
-  bundleIdPrefix: com.sramzz
+  bundleIdPrefix: com.preventsleep
   deploymentTarget:
     macOS: "26.0"
 
@@ -32,8 +32,8 @@ targets:
     dependencies:
       - target: PreventSleepCore
     settings:
-      PRODUCT_NAME: com.sramzz.mac-no-sleep.helper
-      PRODUCT_BUNDLE_IDENTIFIER: com.sramzz.mac-no-sleep.helper
+      PRODUCT_NAME: com.preventsleep.helper
+      PRODUCT_BUNDLE_IDENTIFIER: com.preventsleep.helper
       MARKETING_VERSION: "1.0.0"
       CURRENT_PROJECT_VERSION: "100"
       CODE_SIGN_ENTITLEMENTS: Sources/PreventSleepHelper/Resources/PreventSleepHelper.entitlements
@@ -63,7 +63,7 @@ targets:
         CFBundleIconName: "AppIcon"
     settings:
       PRODUCT_NAME: PreventSleep
-      PRODUCT_BUNDLE_IDENTIFIER: com.sramzz.mac-no-sleep
+      PRODUCT_BUNDLE_IDENTIFIER: com.preventsleep.app
       MARKETING_VERSION: "1.0.0"
       CURRENT_PROJECT_VERSION: "100"
       CODE_SIGN_ENTITLEMENTS: Sources/PreventSleepApp/Resources/PreventSleep.entitlements
@@ -83,10 +83,10 @@ targets:
           fi
           mkdir -p "$DEST_DAEMONS"
           mkdir -p "$DEST_MACOS"
-          rm -f "$DEST_DAEMONS/com.sramzz.mac-no-sleep.helper"
-          cp "$BUILT_PRODUCTS_DIR/com.sramzz.mac-no-sleep.helper" "$DEST_MACOS/"
-          cp "$SRCROOT/Sources/PreventSleepHelper/com.sramzz.mac-no-sleep.helper.plist" "$DEST_DAEMONS/"
-          codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.sramzz.mac-no-sleep.helper" "$DEST_MACOS/com.sramzz.mac-no-sleep.helper"
+          rm -f "$DEST_DAEMONS/com.preventsleep.helper"
+          cp "$BUILT_PRODUCTS_DIR/com.preventsleep.helper" "$DEST_MACOS/"
+          cp "$SRCROOT/Sources/PreventSleepHelper/com.preventsleep.helper.plist" "$DEST_DAEMONS/"
+          codesign -s "$SIGNING_IDENTITY" -o runtime --force -i "com.preventsleep.helper" "$DEST_MACOS/com.preventsleep.helper"
           find "$DEST_MACOS" -name "*.dylib" -exec codesign -s "$SIGNING_IDENTITY" -o runtime --force {} + 2>/dev/null || true
 
   PreventSleepTests:

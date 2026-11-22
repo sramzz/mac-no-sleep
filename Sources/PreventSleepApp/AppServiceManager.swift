@@ -4,7 +4,7 @@ import ServiceManagement
 public final class AppServiceManager: @unchecked Sendable {
     public static let shared = AppServiceManager()
 
-    public static let helperPlistName = "com.sramzz.mac-no-sleep.helper.plist"
+    public static let helperPlistName = "com.preventsleep.helper.plist"
     private let daemonService: SMAppService
     private let loginService: SMAppService
 

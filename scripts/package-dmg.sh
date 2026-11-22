@@ -85,8 +85,9 @@ fi
 
 # 2. Build Release Target
 echo ""
-echo "📦 Step 1: Generating project & compiling Release build..."
+echo "📦 Step 1: Generating project & compiling clean Release build..."
 cd "$PROJECT_DIR"
+rm -rf "$DERIVED_DATA"
 xcodegen generate
 
 DEVELOPER_DIR="$DEVELOPER_DIR" xcodebuild \
@@ -120,11 +121,11 @@ if [ "$SIGNING_IDENTITY" != "-" ]; then
 fi
 
 # Sign helper tool
-if [ -f "$APP_PATH/Contents/MacOS/com.sramzz.mac-no-sleep.helper" ]; then
+if [ -f "$APP_PATH/Contents/MacOS/com.preventsleep.helper" ]; then
     codesign -s "$SIGNING_IDENTITY" "${SIGN_OPTS[@]}" \
       --entitlements "$PROJECT_DIR/Sources/PreventSleepHelper/Resources/PreventSleepHelper.entitlements" \
-      -i "com.sramzz.mac-no-sleep.helper" \
-      "$APP_PATH/Contents/MacOS/com.sramzz.mac-no-sleep.helper"
+      -i "com.preventsleep.helper" \
+      "$APP_PATH/Contents/MacOS/com.preventsleep.helper"
 fi
 
 # Sign embedded dylibs / frameworks

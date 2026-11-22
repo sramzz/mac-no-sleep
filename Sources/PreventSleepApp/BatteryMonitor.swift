@@ -88,7 +88,7 @@ public final class BatteryMonitor: @unchecked Sendable {
             content.body = "Battery reached \(batteryPercent)%. Normal sleep was restored to protect your laptop from running out of power."
             content.sound = .default
 
-            let request = UNNotificationRequest(identifier: "com.sramzz.mac-no-sleep.low-battery", content: content, trigger: nil)
+            let request = UNNotificationRequest(identifier: "com.preventsleep.app.low-battery", content: content, trigger: nil)
             UNUserNotificationCenter.current().add(request)
         }
     }
