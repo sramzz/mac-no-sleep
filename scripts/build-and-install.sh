@@ -44,12 +44,21 @@ codesign -s "$SIGNING_IDENTITY" -o runtime --force "$BUILT_APP"
 echo "Verifying code signatures..."
 codesign --verify --deep --strict "$BUILT_APP"
 
+LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister"
+"$LSREGISTER" -u "$BUILT_APP" 2>/dev/null || true
+"$LSREGISTER" -u "$PROJECT_DIR/build/dmg_staging/PreventSleep.app" 2>/dev/null || true
+
 echo "=== Build and Verification Complete ==="
 if [[ "${1:-}" == "--install" || "${1:-}" == "-i" ]]; then
     echo "Installing to /Applications..."
+    killall PreventSleep 2>/dev/null || true
+    if [ -x "/Applications/PreventSleep.app/Contents/MacOS/PreventSleep" ]; then
+        /Applications/PreventSleep.app/Contents/MacOS/PreventSleep --unregister 2>/dev/null || true
+        sleep 1
+    fi
     rm -rf /Applications/PreventSleep.app
     cp -R "$BUILT_APP" /Applications/
-    /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted /Applications/PreventSleep.app
+    "$LSREGISTER" -f -R -trusted /Applications/PreventSleep.app
     echo "Installed to /Applications/PreventSleep.app"
 else
     echo "To install to /Applications, run:"

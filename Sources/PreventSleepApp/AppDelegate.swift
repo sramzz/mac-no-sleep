@@ -77,19 +77,20 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             AppLogger.shared.warning("AppDelegate", "SMAppService register daemon notice: \(error.localizedDescription) (Status: \(AppServiceManager.shared.daemonStatus.rawValue))")
         }
 
-        // Version Handshake & Auto-Upgrade
+        // Version Handshake, Auto-Upgrade & Self-Healing
         if AppServiceManager.shared.daemonStatus == .enabled {
-            Task {
+            Task { [weak self] in
+                guard let self else { return }
                 do {
                     let helperVersion = try await client.getVersion(timeoutSeconds: 3.0)
                     AppLogger.shared.info("AppDelegate", "Helper daemon version confirmed: \(helperVersion) (App: \(PreventSleepBuildInfo.version))")
                     if helperVersion != PreventSleepBuildInfo.version {
                         AppLogger.shared.warning("AppDelegate", "Daemon version mismatch (\(helperVersion) != \(PreventSleepBuildInfo.version)). Upgrading registration...")
-                        try? AppServiceManager.shared.unregisterDaemon()
-                        try? AppServiceManager.shared.registerDaemon()
+                        await self.repairDaemonRegistration()
                     }
                 } catch {
-                    AppLogger.shared.debug("AppDelegate", "Helper version check notice: \(error.localizedDescription)")
+                    AppLogger.shared.warning("AppDelegate", "Helper unreachable despite enabled status (\(error.localizedDescription)). Re-registering daemon...")
+                    await self.repairDaemonRegistration()
                 }
             }
         }
@@ -131,6 +132,16 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { [weak self] in
                 await self?.coordinator.refresh()
             }
+        }
+    }
+
+    private func repairDaemonRegistration() async {
+        try? AppServiceManager.shared.unregisterDaemon()
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        try? AppServiceManager.shared.registerDaemon()
+        await coordinator.refresh()
+        if AppServiceManager.shared.daemonStatus != .enabled {
+            showSetupWindow()
         }
     }
 
