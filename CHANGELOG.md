@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-11-22
+
+### Changed
+- **Custom Menu Bar Status Icons**: Replaced the coffee cup SF Symbols with custom template assets (`StatusIconActive` and `StatusIconInactive`) adapting automatically to Light and Dark Mode — a solidly filled syringe with negative-space graduation notches and enlarged eye when active (ON), and an outlined syringe without needle plus enlarged `z Z` when inactive (OFF).
+- **Vector-Rendered App Icon**: Replaced the legacy coffee mug `AppIcon` with a sharp CoreGraphics vector rendering of the active syringe + eye emblem inside the macOS dark graphite squircle across all 10 macOS icon resolutions (`scripts/generate-icon.swift`).
+- **Setup View Alignment**: Updated the setup header icon and guidance copy in `SetupView` to use the new active status icon.
+
+---
+
 ## [1.0.0] - 2026-11-22
 
 ### Added

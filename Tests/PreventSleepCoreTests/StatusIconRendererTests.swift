@@ -1,3 +1,4 @@
+import AppKit
 import Testing
 @testable import PreventSleepCore
 @testable import PreventSleepAppLib
@@ -25,11 +26,22 @@ struct StatusIconRendererTests {
 
     @Test("OperationalState symbol names")
     func testSymbolNames() {
-        #expect(StatusPresentation.forState(.ready(preventSleep: true)).symbolName == "cup.and.saucer.fill")
-        #expect(StatusPresentation.forState(.ready(preventSleep: false)).symbolName == "cup.and.saucer")
+        #expect(StatusPresentation.forState(.ready(preventSleep: true)).symbolName == "StatusIconActive")
+        #expect(StatusPresentation.forState(.ready(preventSleep: false)).symbolName == "StatusIconInactive")
         #expect(StatusPresentation.forState(.changing(target: true)).symbolName == "arrow.triangle.2.circlepath")
         #expect(StatusPresentation.forState(.unavailable(reason: "err")).symbolName == "exclamationmark.triangle")
         #expect(StatusPresentation.forState(.setupRequired).symbolName == "gearshape.fill")
+    }
+
+    @Test("Ready states produce 18x18 template NSImages")
+    func testReadyStatesProduceTemplateImages() {
+        for preventSleep in [true, false] {
+            let presentation = StatusPresentation.forState(.ready(preventSleep: preventSleep))
+            let image = presentation.image
+            #expect(image != nil)
+            #expect(image?.isTemplate == true)
+            #expect(image?.size == NSSize(width: 18, height: 18))
+        }
     }
 
     @Test("Every state produces a valid non-nil NSImage")

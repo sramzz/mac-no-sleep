@@ -17,11 +17,14 @@ public struct SetupView: View {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(Color.accentColor.opacity(0.12))
                         .frame(width: 52, height: 52)
-                    Image(systemName: "cup.and.saucer.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 28, height: 28)
-                        .foregroundStyle(Color.accentColor)
+                    if let nsImage = StatusPresentation.forState(.ready(preventSleep: true)).image {
+                        Image(nsImage: nsImage)
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 28, height: 28)
+                            .foregroundStyle(Color.accentColor)
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -49,7 +52,7 @@ public struct SetupView: View {
                     Text("All Set & Ready!")
                         .font(.headline)
 
-                    Text("The background service is active. Prevent Sleep is now in your menu bar (☕️). Click the icon anytime to toggle sleep.")
+                    Text("The background service is active. Prevent Sleep is now in your menu bar. Click the icon anytime to toggle sleep.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

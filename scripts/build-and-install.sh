@@ -24,7 +24,10 @@ if [ ! -d "$BUILT_APP" ]; then
 fi
 
 echo "Built app at: $BUILT_APP"
-SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Apple Development" | head -n 1 | awk -F'"' '{print $2}' || true)
+SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Developer ID Application" | head -n 1 | awk -F'"' '{print $2}' || true)
+if [ -z "$SIGNING_IDENTITY" ]; then
+    SIGNING_IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep "Apple Development" | head -n 1 | awk -F'"' '{print $2}' || true)
+fi
 if [ -z "$SIGNING_IDENTITY" ]; then
     SIGNING_IDENTITY="-"
 fi

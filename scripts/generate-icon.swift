@@ -90,40 +90,119 @@ func renderMasterIcon() -> NSImage {
     ctx.strokePath()
     ctx.restoreGState()
 
-    // 4. Central Icon: SF Symbol or Custom Rendered Coffee Cup
-    let iconConfig = NSImage.SymbolConfiguration(pointSize: 340, weight: .semibold)
-    if let symbol = NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: nil)?.withSymbolConfiguration(iconConfig) {
-        let targetRect = NSRect(x: 232, y: 240, width: 560, height: 500)
+    // 4. Central Icon: Pure vector Active Syringe + Eye tinted with warm amber gradient
+    let targetRect = NSRect(x: 232, y: 232, width: 560, height: 560)
+    let offX = 4.0
+    let offY = 11.0
+    let scale = targetRect.width / 165.0
 
-        // Draw shadow under coffee cup
-        ctx.saveGState()
-        ctx.setShadow(offset: CGSize(width: 0, height: -14), blur: 24, color: NSColor.black.withAlphaComponent(0.4).cgColor)
-
-        // Draw warm amber gradient on the cup
-        if let tinted = symbol.copy() as? NSImage {
-            tinted.lockFocus()
-            NSColor(red: 1.0, green: 0.76, blue: 0.38, alpha: 1.0).set()
-            let imageRect = NSRect(origin: .zero, size: tinted.size)
-            imageRect.fill(using: .sourceAtop)
-            tinted.unlockFocus()
-            tinted.draw(in: targetRect, from: .zero, operation: .sourceOver, fraction: 1.0)
-        }
-        ctx.restoreGState()
-
-        // Highlight layer on top of cup
-        if let highlight = symbol.copy() as? NSImage {
-            highlight.lockFocus()
-            let highlightGrad = NSGradient(
-                colors: [
-                    NSColor(red: 1.0, green: 0.92, blue: 0.75, alpha: 0.95),
-                    NSColor(red: 1.0, green: 0.65, blue: 0.22, alpha: 0.85)
-                ]
-            )
-            highlightGrad?.draw(in: NSRect(origin: .zero, size: highlight.size), angle: 90)
-            highlight.unlockFocus()
-            highlight.draw(in: targetRect, from: .zero, operation: .sourceOver, fraction: 0.92)
-        }
+    func canvasPoint(cx: Double, cy: Double) -> CGPoint {
+        CGPoint(
+            x: targetRect.minX + CGFloat(cx) * scale,
+            y: targetRect.maxY - CGFloat(cy) * scale
+        )
     }
+
+    func uvPoint(_ u: Double, _ v: Double) -> CGPoint {
+        let cx = offX + (u + v) * 0.5
+        let cy = offY + (u - v) * 0.5
+        return canvasPoint(cx: cx, cy: cy)
+    }
+
+    func addUVRect(_ path: CGMutablePath, uMin: Double, uMax: Double, vMin: Double, vMax: Double) {
+        path.move(to: uvPoint(uMin, vMin))
+        path.addLine(to: uvPoint(uMax, vMin))
+        path.addLine(to: uvPoint(uMax, vMax))
+        path.addLine(to: uvPoint(uMin, vMax))
+        path.closeSubpath()
+    }
+
+    let syringePath = CGMutablePath()
+    // Plunger handle
+    addUVRect(syringePath, uMin: 127, uMax: 173, vMin: -128, vMax: -116)
+    // Plunger shaft
+    addUVRect(syringePath, uMin: 143, uMax: 159, vMin: -116, vMax: -83)
+    // Finger flange
+    addUVRect(syringePath, uMin: 107, uMax: 193, vMin: -83, vMax: -72)
+    // Filled syringe barrel
+    addUVRect(syringePath, uMin: 121, uMax: 177, vMin: -72, vMax: 52)
+    // 3 negative-space graduation notches (subtracted via even-odd fill)
+    addUVRect(syringePath, uMin: 134, uMax: 152, vMin: -45, vMax: -35)
+    addUVRect(syringePath, uMin: 134, uMax: 152, vMin: -17, vMax: -7)
+    addUVRect(syringePath, uMin: 134, uMax: 152, vMin: 11, vMax: 21)
+    // Needle hub
+    addUVRect(syringePath, uMin: 137, uMax: 159, vMin: 52, vMax: 71)
+    // Needle
+    addUVRect(syringePath, uMin: 145, uMax: 151, vMin: 71, vMax: 148)
+
+    // 1.38x Eye centered at (122.0, 128.0) in 165x165 space
+    let eyeCX = 122.0
+    let eyeCY = 128.0
+    let eyeRX = 35.0
+    let eyeCtrlY = 21.0 / 0.75 // peak height ry = 21.0
+    let eyePath = CGMutablePath()
+    let leftCorner = canvasPoint(cx: eyeCX - eyeRX, cy: eyeCY)
+    let rightCorner = canvasPoint(cx: eyeCX + eyeRX, cy: eyeCY)
+    eyePath.move(to: leftCorner)
+    eyePath.addCurve(
+        to: rightCorner,
+        control1: canvasPoint(cx: eyeCX - 0.45 * eyeRX, cy: eyeCY - eyeCtrlY),
+        control2: canvasPoint(cx: eyeCX + 0.45 * eyeRX, cy: eyeCY - eyeCtrlY)
+    )
+    eyePath.addCurve(
+        to: leftCorner,
+        control1: canvasPoint(cx: eyeCX + 0.45 * eyeRX, cy: eyeCY + eyeCtrlY),
+        control2: canvasPoint(cx: eyeCX - 0.45 * eyeRX, cy: eyeCY + eyeCtrlY)
+    )
+    eyePath.closeSubpath()
+
+    let pupilCenter = canvasPoint(cx: eyeCX, cy: eyeCY)
+    let pupilRadius = CGFloat(9.8 * scale)
+    let pupilRect = CGRect(
+        x: pupilCenter.x - pupilRadius,
+        y: pupilCenter.y - pupilRadius,
+        width: pupilRadius * 2.0,
+        height: pupilRadius * 2.0
+    )
+
+    // Draw drop shadow and alpha-masked gradient in a transparency layer
+    ctx.saveGState()
+    ctx.setShadow(offset: CGSize(width: 0, height: -14), blur: 24, color: NSColor.black.withAlphaComponent(0.45).cgColor)
+    ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+
+    ctx.setFillColor(NSColor.white.cgColor)
+    ctx.setStrokeColor(NSColor.white.cgColor)
+    ctx.setLineWidth(CGFloat(6.8 * scale))
+    ctx.setLineCap(.round)
+    ctx.setLineJoin(.round)
+
+    ctx.addPath(syringePath)
+    ctx.fillPath(using: .evenOdd)
+
+    ctx.addPath(eyePath)
+    ctx.strokePath()
+
+    ctx.fillEllipse(in: pupilRect)
+
+    ctx.setBlendMode(.sourceIn)
+    ctx.clip(to: targetRect)
+
+    let iconColors = [
+        NSColor(red: 1.0, green: 0.92, blue: 0.72, alpha: 1.0).cgColor,
+        NSColor(red: 1.0, green: 0.74, blue: 0.34, alpha: 1.0).cgColor,
+        NSColor(red: 0.96, green: 0.56, blue: 0.16, alpha: 1.0).cgColor
+    ] as CFArray
+    if let iconGrad = CGGradient(colorsSpace: colorSpace, colors: iconColors, locations: [0.0, 0.5, 1.0]) {
+        ctx.drawLinearGradient(
+            iconGrad,
+            start: CGPoint(x: 512, y: targetRect.maxY),
+            end: CGPoint(x: 512, y: targetRect.minY),
+            options: []
+        )
+    }
+
+    ctx.endTransparencyLayer()
+    ctx.restoreGState()
 
     image.unlockFocus()
     return image

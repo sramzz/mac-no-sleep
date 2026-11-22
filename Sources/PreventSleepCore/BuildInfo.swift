@@ -17,7 +17,7 @@ public enum PreventSleepSecurity: Sendable {
 }
 
 public enum PreventSleepBuildInfo: Sendable {
-    public static let version = "1.0.0"
-    public static let buildNumber = "100"
-    public static let displayVersion = "1.0.0 (100)"
+    public static let version = "1.0.1"
+    public static let buildNumber = "101"
+    public static let displayVersion = "1.0.1 (101)"
 }

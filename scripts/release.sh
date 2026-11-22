@@ -8,8 +8,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-VERSION="${1:-1.0.0}"
-BUILD_NUM="${2:-100}"
+VERSION="${1:-1.0.1}"
+BUILD_NUM="${2:-101}"
 NOTARIZE_PROFILE="${3:-}"
 
 echo "============================================================"

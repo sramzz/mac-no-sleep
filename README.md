@@ -42,7 +42,7 @@ To toggle system power management without recurring password prompts while maint
 |                                  YOUR MAC                                     |
 |                                                                               |
 |  1. Left-click Menu Bar Icon (or run --toggle)                                |
-|     (cup.and.saucer.fill)                                                     |
+|     (StatusIconActive / StatusIconInactive)                                   |
 |            │                                                                  |
 |            ▼                                                                  |
 |  +────────────────────────────────────────+                                   |
@@ -96,8 +96,8 @@ To toggle system power management without recurring password prompts while maint
 
 | State | Menu Bar Icon | Tooltip | Meaning |
 | :--- | :---: | :--- | :--- |
-| **Ready (ON)** | `cup.and.saucer.fill` | Prevent Sleep: On | Sleep is disabled (`SleepDisabled 1`). Mac will stay awake. |
-| **Ready (OFF)** | `cup.and.saucer` | Prevent Sleep: Off | Sleep is allowed (`SleepDisabled 0`). Normal power rules apply. |
+| **Ready (ON)** | `StatusIconActive` (syringe + eye) | Prevent Sleep: On | Sleep is disabled (`SleepDisabled 1`). Mac will stay awake. |
+| **Ready (OFF)** | `StatusIconInactive` (syringe + zZ) | Prevent Sleep: Off | Sleep is allowed (`SleepDisabled 0`). Normal power rules apply. |
 | **Changing** | `arrow.triangle.2.circlepath` | Changing sleep setting... | Mutation in flight. Concurrent clicks are safely debounced. |
 | **Setup Required** | `gearshape.fill` | Setup required | Helper requires one-time approval in System Settings. |
 | **Unavailable** | `exclamationmark.triangle` | Sleep setting unavailable | Read error or helper unreachable. Click opens setup window. |
