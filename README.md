@@ -196,6 +196,16 @@ If the application was already moved to Trash or cannot be opened, run the recov
 
 ---
 
+## Developer Documentation & Future Iterations
+
+For engineers, maintainers, and future development iterations, see the dedicated guides:
+- [Engineering Philosophy & Future Iteration Guide](docs/FUTURE_ITERATIONS_GUIDE.md) — Architectural principles, target map, roadmap milestones, and release procedures.
+- [Commercial Distribution Guide](docs/DISTRIBUTION.md) — Notarization, Apple Developer setup, and payment platforms.
+- [Changelog](CHANGELOG.md) — Release history and version notes.
+- [EULA](EULA.md) — Commercial end-user license agreement.
+
+---
+
 ## License
 
 Commercial Proprietary License. Copyright © 2026 Santiago Ramirez. All rights reserved.  
